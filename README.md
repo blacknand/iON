@@ -10,6 +10,28 @@ Register allocation is the single most high-leverage optimization in a compiler 
 - **Graph Theory**: Construction and coloring of interference graphs.
 - **Heuristic Optimization**: Spill-cost calculation based on loop depth.
 
+## Build
+```bash
+# Build everything (both test frameworks)
+mkdir build && cd build
+cmake ..
+cmake --build .
+
+# Run all tests
+ctest --output-on-failure
+
+# Or run individually
+./ion_test_gtest
+./ion_test_catch2
+```
+
+### Build with only one framework
+```bash
+cmake -DION_USE_CATCH2=OFF ..   # GoogleTest only
+cmake -DION_USE_GTEST=OFF ..    # Catch2 only
+cmake -DION_BUILD_TESTS=OFF ..  # No tests
+```
+
 ## Architecture
 
 The pipeline follows the standard LLVM backend flow:
