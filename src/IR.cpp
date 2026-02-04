@@ -7,10 +7,10 @@ void Instruction::dump() const {
     // Output destination
     std::visit([](auto&& arg) {
         using T = std::decay_t<decltype(arg)>;
-        if constexpr (std::is_same<T, VReg>) {
-            std::cout << "%" << T.id << ", ";
-        } else if (std::holds_alternative<std::monostate>(T)) {
-            ...
+        if constexpr (std::is_same_v<T, VReg>) {
+            std::cout << "%" << arg.id << ", ";
+        } else if constexpr (std::is_same_v<T, std::monostate>) {
+            // ...
         }
     }, def);
 
@@ -18,15 +18,15 @@ void Instruction::dump() const {
     for (const auto& op : uses) {
         std::visit([](auto&& arg) {
             using T = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_same<T, VReg>) {
-                std::cout << "%" << T.id << ", ";
-            } else if constexpr (std::is_same<T, Imm>) {
-                std::cout << T.value << ", ";
-            } else if constexpr (std::is_same<T, Label>) {
-                std::cout << T.label << ", ";
+            if constexpr (std::is_same_v<T, VReg>) {
+                std::cout << "%" << arg.id << ", ";
+            } else if constexpr (std::is_same_v<T, Imm>) {
+                std::cout << arg.value << ", ";
+            } else if constexpr (std::is_same_v<T, Label>) {
+                std::cout << arg.name << ", ";
             }
             std::cout << " ";
-        }, op)
+        }, op);
     }
 
     std::cout << "\n";

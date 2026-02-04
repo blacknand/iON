@@ -14,7 +14,10 @@ option(ION_USE_CATCH2 "Use Catch2" ON)
 add_library(ion_lib
     src/IR.cpp
 )
-target_include_directories(ion_lib PUBLIC ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(ion_lib PUBLIC
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/ion
+)
 
 # Compiler warnings for library
 if(MSVC)
