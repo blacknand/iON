@@ -59,7 +59,7 @@ if(ION_BUILD_TESTS)
         add_executable(ion_test_gtest
             tests/test_main_gtest.cpp
             tests/test_ir.cpp
-            # Add more test files here
+            tests/test_frontend.cpp
         )
         target_link_libraries(ion_test_gtest PRIVATE ion_lib GTest::gtest_main)
         

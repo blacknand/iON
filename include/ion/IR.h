@@ -31,7 +31,7 @@ enum class Opcode {
 // Structs
 struct Instruction {
     Opcode op;
-    std::variant<VReg, std::monostate> def;         // Destination (optional)
+    std::variant<std::monostate, VReg> def;         // Destination (optional)
     std::vector<Operand> uses;                      // Sources
 
     void dump() const; 

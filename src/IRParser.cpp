@@ -111,7 +111,15 @@ void IRParser::parseInstruction(Function& fn, BasicBlock& block) {
                 instr.def = VReg{id};
             else    
                 instr.uses.push_back(VReg{id});
+            consume(TokenType::Register, "Expected Register");
         }
+
+        else if (m_currentToken.type == TokenType::Integer) {
+            int val = std::stoi(std::string(m_currentToken.text));
+            instr.uses.push_back(Imm{val});
+            consume(TokenType::Integer, "Expected Integer");
+        }
+
         else if (m_currentToken.type == TokenType::Opcode) {
             // Labels appear as identifiers (Opcode type) in the operand list
             instr.uses.push_back(Label{std::string(m_currentToken.text)});

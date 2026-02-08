@@ -41,11 +41,12 @@ Token Lexer::next() {
         while (std::isalnum(current()) || current() == '.' || current() == '_')
             advance();
 
-        return makeToken(TokenType::Unkown, start, 1);
+        return makeToken(TokenType::Opcode, start, m_pos - start);
+        // return makeToken(TokenType::Unkown, start, 1);
     }
 
     advance();
-    return makeToken(TokenType::Unkown, start, 1);
+    return makeToken(TokenType::Opcode, start, m_pos - start);
 }
 
 Token Lexer::peek() const {
