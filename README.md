@@ -55,9 +55,10 @@ graph LR
 - **Smart Spilling**: If K < Degree(N), it spills variables with the lowest spill cost (calculated via `use_count / 10^loop_depth`).
 - **Graphviz Integration**: Dumps `.dot` files at every stage to visualize the allocation process.
 
+
 ## Design Trade-offs
 
-Systems engineering is the art of managing trade-offs. Here is why iON is built this way:
+Here is why iON is built this way:
 
 ### Chaitin-Briggs vs. Linear Scan
 

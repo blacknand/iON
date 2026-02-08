@@ -12,6 +12,9 @@ option(ION_USE_GTEST "Use GoogleTest" ON)
 # Main library (so tests can link against it)
 add_library(ion_lib
     src/IR.cpp
+    src/CFGConstructor.cpp
+    src/IRParser.cpp
+    src/Lexer.cpp
 )
 target_include_directories(ion_lib PUBLIC
     ${CMAKE_SOURCE_DIR}/include
@@ -23,6 +26,13 @@ if(MSVC)
     target_compile_options(ion_lib PRIVATE /W4)
 else()
     target_compile_options(ion_lib PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+# Enable Sanitizers for Debug builds
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    # ASan, LSan, UBSan
+    add_compile_options(-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address -fsanitize=undefined)
 endif()
 
 # Main executable

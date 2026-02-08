@@ -1,8 +1,11 @@
 #pragma once
+
 #include <vector>
 #include <string>
 #include <variant>
 #include <iostream>
+#include <memory>
+
 
 // Virtual Register (e.g., %1, %42)
 struct VReg {
@@ -36,6 +39,7 @@ struct Instruction {
 
 struct BasicBlock {
     int id;
+    int loopDepth;
     std::string label;                      // Label at the start of the block
     std::vector<Instruction> instrs;        
     std::vector<BasicBlock*> preds;         // Predecessors (who jumps to me)
@@ -44,7 +48,7 @@ struct BasicBlock {
 
 struct Function {
     std::string name;
-    std::vector<BasicBlock*> blocks;         // Owner of the memory
+    std::vector<std::unique_ptr<BasicBlock>> blocks;         // Owner of the memory
 };
 
 // Overloads
