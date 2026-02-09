@@ -1,5 +1,7 @@
 #include "CFGConstructor.h"
 
+#include <algorithm>
+
 // NOTE: helper, may want to move elsewhere (probably include/)
 std::string getTargetLabel(const Instruction& instr) {
     // Returns the right most label in the Instruction
