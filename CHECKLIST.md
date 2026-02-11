@@ -9,7 +9,7 @@
   - Write a parser that reads a text file (e.g., input.ir) and constructs the Function object.
   - Requirement: It must handle labels and branches (JMP label, BEQ label).
 
-- [ ] **1.3 Visual Debugging (Critical)**
+- [X] **1.3 Visual Debugging (Critical)**
   - Implement dumpCFG(Function&) that outputs a generic .dot file.
   - Goal: Run dot -Tpng cfg.dot -o cfg.png and see your blocks connected correctly.
 
@@ -35,7 +35,7 @@
 
 - [ ] **3.2 Visualize Conflict**
   - Implement dumpInterferenceGraph().
-  - Goal: See a web of nodes. This is your portfolio "money shot" #1.
+  - Goal: See a web of nodes.
 
 # Phase 3.5: Move Coalescing (The Optimization)
 
