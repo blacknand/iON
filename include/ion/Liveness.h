@@ -6,22 +6,32 @@
 #include <bitset>
 #include <set>
 
+struct LivenessInfo {
+    std::map<int, std::vector<bool>> UEVar;
+    std::map<int, std::vector<bool>> VarKill;
+};
+
 // Hold the results of the equations solved
 struct LivenessResult {
-    std::string functionName;
+    // NOTE: good for correctness + debugging, slow in practice
     std::map<int, std::set<int>> liveoutSet;
     std::map<int, std::set<int>> liveinSet;     // NOTE: have no idea if want
+
+    // NOTE: fast, but with spare IDs may not be good idea
+    // Indexed by block ID
+    // std::vector<std::set<int>> liveoutSet;        
+    // std::vector<std::set<int>> liveinSet;
 };
 
 class LivenessAnalysis {
 public:
     // Gathers the initial information and stores in the internal bitsets
-    void computeUseDef(BasicBlock& block);
-    LivenessResult solveEquations(Function& fn);
-private:
+    // LivenessResult solveEquations(Function& fn);
+    LivenessResult analyse(Function& fn);
     // NOTE: for expansion, use Boost.DynamicBitset
     // Block ID -> bitset
-    // upperbound of 256 since the IR programs are very small
-    std::map<int, std::bitset<256>> UEVar;   
-    std::map<int, std::bitset<256>> VarKill; 
+    // std::map<int, std::vector<bool>> UEVar;   
+    // std::map<int, std::vector<bool>> VarKill; 
+private:
+    LivenessInfo computeUseDef(Function& fn);
 };
