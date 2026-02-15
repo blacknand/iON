@@ -9,16 +9,16 @@
   - Write a parser that reads a text file (e.g., input.ir) and constructs the Function object.
   - Requirement: It must handle labels and branches (JMP label, BEQ label).
 
-- [X] **1.3 Visual Debugging (Critical)**
+- [] **1.3 Visual Debugging (Critical)**
   - Implement dumpCFG(Function&) that outputs a generic .dot file.
   - Goal: Run dot -Tpng cfg.dot -o cfg.png and see your blocks connected correctly.
 
 # Phase 2: Liveness Analysis (Weeks 3-4)
 
-- [ ] **2.1 Local Liveness (Inside Blocks)**
+- [X] **2.1 Local Liveness (Inside Blocks)**
   - Implement computeUseDef(): Calculate which variables are used/defined in each block before any other definition.
 
-- [ ] **2.2 Global Liveness (The Solver)**
+- [X] **2.2 Global Liveness (The Solver)**
   - Implement the iterative solver for the Dataflow Equations:
     - $LiveOut[n] = \bigcup_{s \in succ[n]} LiveIn[s]$
     - $LiveIn[n] = Use[n] \cup (LiveOut[n] - Def[n])$

@@ -6,6 +6,7 @@
 #include <bitset>
 #include <set>
 
+
 struct LivenessInfo {
     std::map<int, std::vector<bool>> UEVar;
     std::map<int, std::vector<bool>> VarKill;
@@ -23,6 +24,8 @@ struct LivenessResult {
     // std::vector<std::set<int>> liveinSet;
 };
 
+LivenessInfo computeUseDef(Function& fn);
+
 class LivenessAnalysis {
 public:
     // Gathers the initial information and stores in the internal bitsets
@@ -32,6 +35,6 @@ public:
     // Block ID -> bitset
     // std::map<int, std::vector<bool>> UEVar;   
     // std::map<int, std::vector<bool>> VarKill; 
-private:
-    LivenessInfo computeUseDef(Function& fn);
+// private:
+//     FRIEND_TEST(LivenessAnalysisTest, GatherInitialInfo);
 };
