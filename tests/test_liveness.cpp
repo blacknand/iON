@@ -105,9 +105,20 @@ TEST_F(LivenessAnalysisTest, GatherInitialInfo) {
     std::vector<bool> UEVarBlk1 = li.UEVar[1];
     std::vector<bool> VarKillBlk1 = li.VarKill[1];
 
+    for (const auto& var : VarKillBlk1)
+        std::cout << var << " ";
+    std::cout << "\n";
+
     ASSERT_EQ(VarKillBlk1.size(), 2);
+    ASSERT_EQ(UEVarBlk1.size(), 0);
+
+    EXPECT_TRUE(VarKillBlk1[1]);
+    EXPECT_TRUE(VarKillBlk1[2]);
+    EXPECT_FALSE(VarKillBlk1[0]);
 
     // Block B
+
+
     // Exit Block
 }
 
