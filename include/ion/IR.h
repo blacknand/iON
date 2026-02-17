@@ -6,7 +6,6 @@
 #include <iostream>
 #include <memory>
 
-
 // Virtual Register (e.g., %1, %42)
 struct VReg {
     int id;

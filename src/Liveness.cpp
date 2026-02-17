@@ -56,5 +56,37 @@ LivenessInfo computeUseDef(Function& fn) {
 LivenessResult LivenessAnalysis::analyse(Function& fn) {
     LivenessInfo livenessInfo = computeUseDef(fn);
     LivenessResult lr;
+
+    int N = fn.blocks.size();
+    for (int i = 0; i < N; i++) {
+        lr.liveoutSet[fn.blocks[i]->id] = {};
+        lr.liveinSet[fn.blocks[i]->id] = {};
+    }
+
+    bool changed = true;
+    int liveOut = 0, liveIn = 0;
+    std::map<int, std::set<int>> prevLiveoutSet = {};
+    std::map<int, std::set<int>> prevLiveoutSet = {};
+    while (changed) {
+        changed = false;
+        for (int i = 0; i < N; i++) {
+            // LiveOut(n) = UNION_ALL(m in succ(n)) { UEVar(m) UNION (LiveOut(m) MINUS VarKill(m)) }
+            // LiveIn(n) = UEVar(n) UNION (LiveOut(n) MINUS VarKill(n))
+            std::vector<BasicBlock*> succs = fn.blocks[i]->succs;
+            // std::vector<bool> UEVar = lr.UEVar[i];
+            // std::vector<bool> VarKill = lr.UEVar[i];
+            int UEVar = lr.UEVar[i].size();
+            int VarKill = lr.UEVar[i].size();
+
+            lr.liveoutSet[fn.blocks[i]->id].insert();
+            lr.liveinSet[fn.blocks[i]->id];
+            // If current LiveOut set is different that previos
+            if (prevLiveoutSet[fn.blocks[i]->id] != lr.liveoutSet[fn.blocks[i]->id]) {
+                changed = true;
+                prevLiveoutSet = lr.liveoutSet[fn.blocks[i]->id];
+            }
+        }
+    }
+
     return lr;
 }
