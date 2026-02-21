@@ -133,6 +133,21 @@ TEST_F(LivenessAnalysisTest, GatherInitialInfo) {
 }
 
 TEST_F(LivenessAnalysisTest, Analyse) {
-    Function f;
+    LivenessAnalysis la;
+    LivenessResult c = la.analyse(f);
+
+    // Block A (Entry)
+    std::set<int> BlockA_LiveOut = c.liveoutSet[1];
+    std::set<int> BlockA_LiveIn = c.liveinSet[1];
+
+    ASSERT_EQ(BlockA_LiveOut.size(), 2);
+    ASSERT_EQ(BlockA_LiveIn.size(), 0);
+
+    ASSERT_TRUE(BlockA_LiveOut.contains(1));
+    ASSERT_TRUE(BlockA_LiveOut.contains(2));
+
+    // Block B
     
+
+    // Block C (Exit)
 }
