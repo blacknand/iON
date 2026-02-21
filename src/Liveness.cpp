@@ -87,9 +87,9 @@ LivenessResult LivenessAnalysis::analyse(Function& fn) {
 
                 // Set for UEVar(S) ∪ (LiveOut(S) − VarKill(S)
                 std::set<int> UEVar_U_LiveOut_NotVarKill = {};
-                for (const int& x : LiveOut_NotVarKill) {
-                    if (UEVar[x]) {
-                        UEVar_U_LiveOut_NotVarKill.insert(x);
+                for (size_t u = 0; u < UEVar.size(); u++) {
+                    if (UEVar[u]) {
+                        UEVar_U_LiveOut_NotVarKill.insert(u);
                     }
                 }
                 
@@ -120,9 +120,9 @@ LivenessResult LivenessAnalysis::analyse(Function& fn) {
 
         // Set for UEVar(B) ∪ (LiveOut(B) − VarKill(B)
         std::set<int> UEVar_U_LiveOut_NotVarKill = {};
-        for (const int& x : LiveOut_NotVarKill) {
-            if (UEVar[x]) {
-                UEVar_U_LiveOut_NotVarKill.insert(x);
+        for (size_t u = 0; u < UEVar.size(); u++) {
+            if (UEVar[u]) {
+                UEVar_U_LiveOut_NotVarKill.insert(u);
             }
         }
 
