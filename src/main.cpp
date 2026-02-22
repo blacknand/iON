@@ -1,82 +1,41 @@
-#include "IR.h"
+#include "IRParser.h"
+#include "Lexer.h"
+#include "CFGConstructor.h"
+#include "Liveness.h"   
+
+#include <fstream>
+#include <sstream>
+#include <iostream>
 
 int main() {
-    /* Target Program
-    Block 1 (Label: "entry"):
-        %1 = 10
-        %2 = 20
-        %3 = ADD %1, %2
-        BEQ %3, 30, L_EXIT  <-- Branch to exit if %3 == 30
+    std::string src = R"(
+    entry:
+        MOV %1, 0
+        MOV %2, 10
+    loop:
+        BEQ %1, %2, exit
+    body:
+        ADD %3, %1, 1
+        JMP loop
+    exit:
+        RET %1
+    )";
 
-    Block 2 (Label: "L_EXIT"):
-        RET %3
-    */
+    Lexer lexer(src);
+    IRParser parser(lexer);
+    auto fn = parser.parseFunction();
 
-    VReg r1 = {1};  // Virtual Register %1
-    VReg r2 = {2};  // Virtual Register %2
-    VReg r3 = {3};  // Virtual Register %3
-    
-    Imm i10 = {10}; // Literal number 10
-    Imm i20 = {20}; // Literal number 20
-    Imm i30 = {30}; // Literal number 30
+    CFGConstructor::construct(*fn);
 
-    Label l_exit = {.name = "L_EXIT"};      // Target for jump
+    CFGConstructor::dumpCFG(*fn, "cfg.dot");
+    // Now run:  dot -Tpng cfg.dot -o cfg.png
 
-    Function myFunc;
-    myFunc.name = "test_func";
+    LivenessAnalysis la;
+    auto liveness = la.analyse(*fn);
 
-    BasicBlock entryBlock;
-    entryBlock.id = 1;
-    entryBlock.label = "entry";
+    CFGConstructor::dumpCFGWithLiveness(*fn, liveness.liveinSet, liveness.liveoutSet,
+                                        "cfg_liveness.dot");
 
-    BasicBlock exitBlock;
-    exitBlock.id = 2;
-    exitBlock.label = "L_EXIT";
-
-    // %1 = 10 (MOV)
-    entryBlock.instrs.push_back(Instruction {
-        .op = Opcode::MOV,
-        .def = r1,
-        .uses = {i10}
-    });
-
-    // %2 = 20
-    entryBlock.instrs.push_back(Instruction {
-        .op = Opcode::MOV,
-        .def = r2,
-        .uses = {i20}
-    });
-
-    // %3 = ADD %1, %2
-    entryBlock.instrs.push_back(Instruction {
-        .op = Opcode::ADD,
-        .def = r3,
-        .uses = {r1, r2}
-    });
-
-    // BEQ %3, 30, L_EXIT
-    entryBlock.instrs.push_back({
-        Opcode::BEQ,
-        std::monostate{},
-        {r3, i30, l_exit}
-    });
-
-    // RET %3
-    entryBlock.instrs.push_back({
-        Opcode::RET,
-        std::monostate{},
-        {r3}
-    });
-
-    entryBlock.succs.push_back(&exitBlock);     // Entry -> Exit
-    exitBlock.preds.push_back(&entryBlock);     // Exit <- Entry
-
-    myFunc.blocks.push_back(std::make_unique<BasicBlock>(entryBlock));
-    myFunc.blocks.push_back(std::make_unique<BasicBlock>(exitBlock));
-    std::cout << "Successfully constructed function " << myFunc.name << "\n";
-    for (const auto &b : myFunc.blocks) {
-        for (const Instruction &i : b->instrs)
-            i.dump();
-    }
+    std::cout << "Wrote cfg.dot and cfg_liveness.dot\n";
     return 0;
 }
