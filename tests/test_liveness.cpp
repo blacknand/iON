@@ -252,6 +252,7 @@ TEST_F(LivenessAnalysisTest, Analyse_DAG) {
     LivenessAnalysis la;
     LivenessResult c = la.analyse(*dagFN);
 
+    happyFunTime(10, 20);
 }
 
 TEST_F(LivenessAnalysisTest, Analyse_SimpleLoop) {
