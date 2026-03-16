@@ -5,12 +5,12 @@
 #include <vector>
 #include <memory>
 
-struct Block {
+struct BasicBlock {
     int id;
     std::string label;
     std::vector<Instruction> instructions;
-    std::vector<std::unique_ptr<Block>> predecessors;
-    std::vector<std::unique_ptr<Block>> successors;
+    std::vector<BasicBlock*> predecessors;
+    std::vector<BasicBlock*> successors;
 }
 
 struct Function {
