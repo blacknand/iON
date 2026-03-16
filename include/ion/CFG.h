@@ -1,10 +1,19 @@
 #pragma once
 
+#include "IR.h"
+
+#include <vector>
+#include <memory>
+
 struct Block {
-    // NOTE: A block is going to contain a series of instructions
+    int id;
+    std::string label;
+    std::vector<Instruction> instructions;
+    std::vector<std::unique_ptr<Block>> predecessors;
+    std::vector<std::unique_ptr<Block>> successors;
 }
 
 struct Function {
-    // NOTE: A Function is going to contain a series of blocks,
-    // but I am not sure if they will be linked.
+    std::string name;
+    std::vector<std::unique_ptr<Block>> blocks;
 }
