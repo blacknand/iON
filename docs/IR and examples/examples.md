@@ -1,7 +1,7 @@
 # Examples
-There are 4 different types of IR program shapes that a CFG solver needs to be able to handle. All shapes are provided in both C and iON IR.
+There are 4 different types of IR program shapes that a CFG solver needs to be able to handle. All shapes are provided in both C and iON three-address IR.
 
-> Each C program only uses `goto` statements rather than using conditionals. This is because iON IR only has `BEQ` so to demonstrate the C program equivelant of each IR program, we only use `goto` to simulate using conditionals.
+> Each C program only uses `goto` statements rather than using conditionals. This is because iON IR only has `BEQ` so to demonstrate the C program equivelant of each IR program, we only use `goto` to simulate using conditionals. The IR also uses explicit terminators, meaning a branching conditional ends the current block.i
 ## Straight-line DAG
 ```c
 // Block A (entry)
@@ -14,9 +14,14 @@ block_B:
     int z = x + y;
     if (z == 30)
         goto block_C;
+    else
+        goto block_X;
 
 block_C:
     return z;
+
+block_X:
+    return -1;
 ```
 
 ```plaintext
@@ -27,10 +32,13 @@ INIT_BLOCK:
 
 BLOCK_B:
     ADD %3, %1, %2
-    BEQ %3, 30, BLOCK_C
+    BEQ %3, 30, BLOCK_C, BLOCK_X
 
 BLOCK_C:
     RET %3
+
+BLOCK_X:
+    RET -1
 ```
 
 
@@ -56,6 +64,7 @@ block_C:
 ```plaintext
 INIT_BLOCK:
     MOV %1, 0
+    JMP main_block
 
 main_block:
     BEQ %1, 40, BLOCK_C
@@ -96,16 +105,17 @@ ret_block:
 INIT_BLOCK:
     MOV %1, 0
     MOV %2, 0
+    JMP OUTER_BLOCK
 
 OUTER_BLOCK:
-    BEQ %1, 10, INNER_BLOCK
+    BEQ %1, 10, INNER_BLOCK, OUTER_BODY
 
 OUTER_BODY:
     ADD %1, %1, 1
     JMP OUTER_BLOCK
 
 INNER_BLOCK:
-    BEQ %2, 5, RET_BLOCK
+    BEQ %2, 5, RET_BLOCK, INNER_BODY
 
 INNER_BODY:
     ADD %2, %2, 1
@@ -136,10 +146,10 @@ exit:
 ```plaintext
 INIT_BLOCK: 
     MOV %1, 5
+    JMP MAIN_BLOCK
 
 MAIN_BLOCK:
-    BEQ %1, 5, COND_1
-    JMP COND_2
+    BEQ %1, 5, COND_1, COND_2
 
 COND_1:
     MOV %1, 1

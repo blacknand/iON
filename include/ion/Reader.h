@@ -8,4 +8,16 @@
 #pragma once
 
 #include "IR.h"
+#include "CFG.h"
+#include "utils/h/stringOperations.h"
 
+#include <string>
+#include <fstream>
+
+class Reader {
+public:
+    Function buildCFG(const std::string& filename);
+private:
+    void findLeaders();
+    Function buildGraph();
+};

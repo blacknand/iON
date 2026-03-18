@@ -38,6 +38,7 @@ struct OpCode {
     LOAD, STORE, MOV
     RET, JMP,
     // CMP
+    BEQ, BZ, BNZ /* BNE, BGT, BLT, BLE... */
 }
 
 struct Instruction {
@@ -46,8 +47,8 @@ struct Instruction {
         - Load immediate: one def, zero VR uses, carries a constant value
         - Copy: one def, one use
         - Binary op: one def, two uses, carries an opcode
-        - One-register conditional branch: zero defs, one use, one target label
-        - Two-register conditional branch: zero defs, two uses, one target label
+        - One-register conditional branch: zero defs, one use, two target labels
+        - Two-register conditional branch: zero defs, two uses, two target labels
         - Unconditional jump: zero defs, zero uses, one target label
         - Return: zero defs, zero uses, no targets
     */
