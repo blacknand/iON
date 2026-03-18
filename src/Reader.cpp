@@ -1,7 +1,9 @@
 #include "Reader.h"
+#include "utils/h/TokenizationOperations.h"
 
 Function Reader::BuildCFG(const std::string& filename) {
     findLeaders(filename);
+    return func;
 }
 
 void Reader::FindLeaders(const std::string& filename) {
@@ -13,10 +15,36 @@ void Reader::FindLeaders(const std::string& filename) {
         fileContents.push_back('\n');
     }
 
-    for (const std::string& line : fileContents) {
-        if (auto label = extract_label_definition(line)) {
+    int idCounter = 0;
+    for (auto it = fileContents.begin(); it != fileContents.end()) {
+        if (auto label = extract_label_definition(*it)) {
+            int blockSize = 1;
             // Encountered a label definition, so construct a BasicBlock
+            std::vector<Instruction> blockInstructions;
+            
+            // Go from the current line until the end of the block to get all instructions
+            std::vector<std::string_view> tokens = tokenize(*it);
+            while (!is_branch(*it)) {
+                Instruction instr{
+                    .op = extract_opcode(*it),
+                    .def = extract_def(tokens),
+                    .labels = extract_target_labels(tokens),
+                    .operands = extract_uses(tokens)
+                };
+                blockInstructions.push_back(instr);
+                ++it;
+                ++blockSize;
+            }
 
+            BasicBlock block{
+                .id = IDCounter++,
+                .label = *label,
+                .instructions = blockInstructions
+                /* Predecessors and successor links are handled during second pass */
+            };
+
+            func.blocks.push_back(std::make_unique<BasicBlock>(block));
+            it += blockSize;
         }
     }
 }

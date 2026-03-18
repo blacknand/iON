@@ -32,7 +32,7 @@ struct OpContainer {
     auto end() { return operands.begin() + currentSize; }
 }
 
-struct OpCode {
+enum class OpCode {
     ADD, SUB, MUL,
     // AND, OR, XOR,
     LOAD, STORE, MOV
@@ -55,8 +55,12 @@ struct Instruction {
 
     OpCode op;
     std::optional<VReg> def;
-    std::optional<std::string> label;
+    // std::optional<std::string> label;
+    std::array<std::string, 2> labels;
+
+    using OperandsVarient = std::variant</* const val */int, /* use */VReg>;
+    std::array<OperandsVarient, 2> operands;
 
     // The container represents the operands
-    OpContainer container;
+    // OpContainer container;
 }

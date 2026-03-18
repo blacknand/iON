@@ -13,6 +13,8 @@
 
 #include <string>
 #include <fstream>
+#include <vector>
+#include <memory>
 
 class Reader {
 public:
@@ -20,4 +22,5 @@ public:
 private:
     void FindLeaders();
     Function BuildGraph();
+    Function func;
 };
