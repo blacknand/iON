@@ -16,8 +16,8 @@
 
 class Reader {
 public:
-    Function buildCFG(const std::string& filename);
+    Function BuildCFG(const std::string& filename);
 private:
-    void findLeaders();
-    Function buildGraph();
+    void FindLeaders();
+    Function BuildGraph();
 };

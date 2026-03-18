@@ -1,10 +1,10 @@
 #include "Reader.h"
 
-Function buildCFG(const std::string& filename) {
+Function Reader::BuildCFG(const std::string& filename) {
     findLeaders(filename);
 }
 
-void Reader::findLeaders(const std::string& filename) {
+void Reader::FindLeaders(const std::string& filename) {
     std::ifstream file(filename);
     std::string str;
     std::string fileContents;
@@ -14,11 +14,14 @@ void Reader::findLeaders(const std::string& filename) {
     }
 
     for (const std::string& line : fileContents) {
-        if contains_label_fast(line, ...) 
+        if (auto label = extract_label_definition(line)) {
+            // Encountered a label definition, so construct a BasicBlock
+
+        }
     }
 }
 
-Function Reader::buildGraph() {
+Function Reader::BuildGraph() {
     /**
     1. No MaxStmt
     2. No Leader array
