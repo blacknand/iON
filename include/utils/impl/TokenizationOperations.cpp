@@ -7,7 +7,6 @@
 */
 
 #include "utils/h/TokenizationOperations.h"
-#include "ion/IR.h"
 
 constexpr bool is_cond_branch_opcode(std::string_view op) noexcept {
     return op == "NZ" || op == "BEQ"; 
