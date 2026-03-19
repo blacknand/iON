@@ -16,12 +16,13 @@ option(ION_USE_GTEST "Use GoogleTest" ON)
 
 # Main library (so tests can link against it)
 add_library(ion_lib
-    src/IR.cpp
-    src/CFGConstructor.cpp
-    src/IRParser.cpp
-    src/Lexer.cpp
+    src/Reader.cpp
     src/Liveness.cpp
+    src/InterferenceGraph.cpp
+    include/utils/impl/Parser.cpp
 )
+# include/ allows: "utils/h/Parser.h", "ion/IR.h"
+# include/ion/ allows: "Reader.h", "Liveness.h", "IR.h", "CFG.h"
 target_include_directories(ion_lib PUBLIC
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/ion
@@ -65,11 +66,8 @@ if(ION_BUILD_TESTS)
 
         # GoogleTest executable
         add_executable(ion_test_gtest
-            tests/test_main_gtest.cpp
-            tests/test_ir.cpp
-            tests/test_frontend.cpp
-            tests/testCFG.cpp
-            tests/test_liveness.cpp
+            tests/TestCFG.cpp
+            tests/TestLiveness.cpp
         )
         target_link_libraries(ion_test_gtest PRIVATE ion_lib GTest::gtest_main)
         

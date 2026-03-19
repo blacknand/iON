@@ -19,6 +19,14 @@ Function Reader::BuildCFG(const std::string& filename) {
 }
 
 void Reader::FindLeaders(const std::string& filename) {
+    /**
+        Iterate through the files contents. When a label decleration
+        is found, add instructions into the vector. When another label
+        decleration is found, create and add a BasicBlock with the
+        instructions inside it. The loop will then go back around and
+        start on the label decleration.
+    */
+
     InstrParser parser;
     std::ifstream file(filename);
     std::string str;
@@ -30,14 +38,6 @@ void Reader::FindLeaders(const std::string& filename) {
 
     int idCounter = 0;
     auto it = fileContents.begin();
-
-    /**
-        Iterate through the files contents. When a label decleration
-        is found, add instructions into the vector. When another label
-        decleration is found, create and add a BasicBlock with the
-        instructions inside it. The loop will then go back around and
-        start on the label decleration.
-    */
 
     for (it != fileContents.end()) {
         auto result = parser.parse(*it);
@@ -76,13 +76,13 @@ void Reader::FindLeaders(const std::string& filename) {
 }
 
 Function Reader::BuildGraph() {
+    /* 
+        Create an edge between the block currently being processed,
+        and the blocks that are referenced for branching within
+        the instructions. Edges are created by using the predecessor
+        and successor vectors of BasicBlock* inside of each BasicBlock.
+    **/ 
     for (size_t i = 0; i < blocks.size(); i++) {
-        /* 
-           Create an edge between the block currently being processed,
-           and the blocks that are referenced for branching within
-           the instructions. Edges are created by using the predecessor
-           and successor vectors of BasicBlock* inside of each BasicBlock.
-        **/ 
         auto block = blocks[i];
         for (size_t j = 0; j < block.instructions.size(); j++) {
             /* Add edges between blocks for all instructions containing a conditional. */
