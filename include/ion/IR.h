@@ -58,8 +58,8 @@ struct Instruction {
     // std::optional<std::string> label;
     std::array<std::string, 2> labels;
 
-    using OperandsVarient = std::variant</* const val */int, /* use */VReg>;
-    std::array<OperandsVarient, 2> operands;
+    using Operands = std::variant</* const val */int, /* use */VReg>;
+    std::array<Operands, 2> operands;
 
     // The container represents the operands
     // OpContainer container;

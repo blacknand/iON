@@ -9,7 +9,6 @@
 
 #include "IR.h"
 #include "CFG.h"
-#include "utils/h/stringOperations.h"
 
 #include <string>
 #include <fstream>

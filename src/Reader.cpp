@@ -1,5 +1,5 @@
 #include "Reader.h"
-#include "utils/h/TokenizationOperations.h"
+#include "utils/h/Parser.h"
 
 Function Reader::BuildCFG(const std::string& filename) {
     findLeaders(filename);
@@ -7,6 +7,7 @@ Function Reader::BuildCFG(const std::string& filename) {
 }
 
 void Reader::FindLeaders(const std::string& filename) {
+    InstrParser parser;
     std::ifstream file(filename);
     std::string str;
     std::string fileContents;
@@ -17,34 +18,38 @@ void Reader::FindLeaders(const std::string& filename) {
 
     int idCounter = 0;
     for (auto it = fileContents.begin(); it != fileContents.end()) {
-        if (auto label = extract_label_definition(*it)) {
-            int blockSize = 1;
-            // Encountered a label definition, so construct a BasicBlock
-            std::vector<Instruction> blockInstructions;
-            
-            // Go from the current line until the end of the block to get all instructions
-            std::vector<std::string_view> tokens = tokenize(*it);
-            while (!is_branch(*it)) {
-                Instruction instr{
-                    .op = extract_opcode(*it),
-                    .def = extract_def(tokens),
-                    .labels = extract_target_labels(tokens),
-                    .operands = extract_uses(tokens)
-                };
-                blockInstructions.push_back(instr);
+        ParsedInstr instrResult = parser.parse(*it);
+        if (instrResult.has_value()) {
+            ParsedInstr& instr = instrResult.value();
+            if (instr.form == Form::LabelDef) {
                 ++it;
-                ++blockSize;
+                auto copy = it;
+                ParsedInstr& copyInstrResult = parser.parse(*copy);
+                std::vector<Instruction> blockInstructions;
+
+                if (copyInstrResult.has_value()) {
+                    // while (copyInstrResult.Form != Form::CondBranch1 || copyInstrResult.Form != Form::CondBranch1) {
+                    while (copyInstrResult.form != Form::LabelDef) {
+                        Instruction newInstr{
+                            .op = copyInstrResult.opcode,
+                            .def = (copyInstrResult.def.has_value()) ? copyInstrResult.def.value : std::nullopt,
+                            .operands = copyInstrResult.uses,
+                            .labels = copyInstrResult.targets
+                        };
+                        blockInstructions.push_back(newInstr);
+                        ++copy;
+                    }
+                }
+
+                BasicBlock block{
+                    .id = idCounter++,
+                    .label = instr.label,
+                    .instructions = blockInstructions
+                }
+
+                func.blocks.push_back(std::make_unique<BasicBlock>(block));
+                it += blockSize;
             }
-
-            BasicBlock block{
-                .id = IDCounter++,
-                .label = *label,
-                .instructions = blockInstructions
-                /* Predecessors and successor links are handled during second pass */
-            };
-
-            func.blocks.push_back(std::make_unique<BasicBlock>(block));
-            it += blockSize;
         }
     }
 }
