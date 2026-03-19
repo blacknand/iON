@@ -17,40 +17,39 @@ void Reader::FindLeaders(const std::string& filename) {
     }
 
     int idCounter = 0;
-    for (auto it = fileContents.begin(); it != fileContents.end()) {
-        ParsedInstr instrResult = parser.parse(*it);
-        if (instrResult.has_value()) {
-            ParsedInstr& instr = instrResult.value();
-            if (instr.form == Form::LabelDef) {
-                ++it;
-                auto copy = it;
-                ParsedInstr& copyInstrResult = parser.parse(*copy);
-                std::vector<Instruction> blockInstructions;
+    auto it = fileContents.begin();
+    for (it != fileContents.end()) {
+        auto result = parser.parse(*it);
+        if (!result) { ++it; continue; }
+        auto& instr = *result;
+        if (instr.form != ParsedInstr::LabelDef) { ++it; continue; }
+        // NOTE: If this will skip any non label definition lines,
+        // would it skip any instructions?
 
-                if (copyInstrResult.has_value()) {
-                    // while (copyInstrResult.Form != Form::CondBranch1 || copyInstrResult.Form != Form::CondBranch1) {
-                    while (copyInstrResult.form != Form::LabelDef) {
-                        Instruction newInstr{
-                            .op = copyInstrResult.opcode,
-                            .def = (copyInstrResult.def.has_value()) ? copyInstrResult.def.value : std::nullopt,
-                            .operands = copyInstrResult.uses,
-                            .labels = copyInstrResult.targets
-                        };
-                        blockInstructions.push_back(newInstr);
-                        ++copy;
-                    }
-                }
+        std::string_view blockLabel = instr.label;
+        ++it;
+        std::vector<Instruction> blockInstructions;
 
-                BasicBlock block{
-                    .id = idCounter++,
-                    .label = instr.label,
-                    .instructions = blockInstructions
-                }
+        while (it != fileContents.end()) {
+            auto inner = parser.parse(*it);
+            if (!inner) { ++it; continue; }
 
-                func.blocks.push_back(std::make_unique<BasicBlock>(block));
-                it += blockSize;
-            }
+            if (inner->form == ParsedInstr::LabelDef) break;
+
+            blockInstructions.push_back(Instruction{
+                .op = instr.opcode,
+                .def = (instr.def.has_value()) ? instr.def.value : std::nullopt,
+                .operands = instr.uses,
+                .labels = instr.targets
+            });
+            ++it;
         }
+
+        func.blocks.push_back(std::make_unique<BasicBlock>(BasicBlock{
+            .id = idCounter++,
+            .label = blockLabel,
+            .instructions = std::move(blockInstructions)
+        }));
     }
 }
 
