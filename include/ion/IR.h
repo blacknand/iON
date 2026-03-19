@@ -56,8 +56,9 @@ struct Instruction {
     OpCode op;
     std::optional<VReg> def;
     // std::optional<std::string> label;
-    std::array<std::string, 2> labels;
+    std::array<std::optional<std::string>, 2> labels;
 
+    // may need to use std::monostate
     using Operands = std::variant</* const val */int, /* use */VReg>;
     std::array<Operands, 2> operands;
 

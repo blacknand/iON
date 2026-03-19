@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <memory>
+#include <unordered_map>
 
 struct BasicBlock {
     int id;
@@ -22,5 +23,6 @@ struct BasicBlock {
 
 struct Function {
     std::string name
-    std::vector<std::unique_ptr<Block>> blocks;
+    std::vector<std::unique_ptr<BasicBlock>> blocks;
+    std::unordered_map<std::string, std::unique_ptr<BasicBlock>> labelToBlock;
 }
