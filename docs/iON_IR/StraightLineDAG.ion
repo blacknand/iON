@@ -1,0 +1,14 @@
+INIT_BLOCK:
+    MOV %1, 10
+    MOV %2, 20
+    JMP BLOCK_B
+
+BLOCK_B:
+    ADD %3, %1, %2
+    BEQ %3, 30, BLOCK_C, BLOCK_X
+
+BLOCK_C:
+    RET
+
+BLOCK_X:
+    RET

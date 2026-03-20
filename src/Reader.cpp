@@ -37,7 +37,7 @@ void TraverseCFG(const Function& func, const std::string& dotFileName) {
     /* Traverse the CFG and output to a .dot file for a graphiz dump */
     std::ofstream dotFile(dotFileName);
     if (!dotFile.is_open()) {
-        std::cerr << "[ERROR] Could not open .dot file\n";
+        std::cerr << "[ERROR] Could not open " << dotFileName << "\n";
         return;
     }
 
@@ -51,9 +51,9 @@ void TraverseCFG(const Function& func, const std::string& dotFileName) {
             dotFile << "    \"" << curBlock << "\" -> \"" << connectedBlock << "\";\n";
         }
 
-        for (BasicBlock* connectedBlock : curBlock->predecessors) {
-            dotFile << "    \"" << curBlock << "\" -> \"" << connectedBlock << "\";\n";
-        }
+        // for (BasicBlock* connectedBlock : curBlock->predecessors) {
+        //     dotFile << "    \"" << curBlock << "\" -> \"" << connectedBlock << "\";\n";
+        // }
     }
 
     dotFile << "}\n";
@@ -64,7 +64,7 @@ Function Reader::BuildCFG(const std::string& filename) {
     FindLeaders(filename);
     BuildGraph();
     // NOTE: There is a copy here
-    TraverseCFG(func, "CFG.dot");
+    TraverseCFG(func, "test.dot");
     return std::move(func);
 }
 

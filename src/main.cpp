@@ -2,11 +2,17 @@
 #include "ion/Reader.h"
 #include "ion/IR.h"
 
-int main() {
+#include <iostream>
+
+int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << "<path-to-file.ion>\n";
+        return 1;
+    }
+
+    std::string inputFile = argv[1];
+    
     Reader reader;
-    Function staightLineDAGFunc = reader.BuildCFG("StraightLineDAG.ion");
-    Function nestedLoopFunc = reader.BuildCFG("NestedLoop.ion");
-    Function simpleLoopFunc = reader.BuildCFG("SimpleLoop.ion");
-    Function diamondFunc = reader.BuildCFG("Diamond.ion");
+    Function cfg = reader.BuildCFG(inputFile);
     return 0;
 }
