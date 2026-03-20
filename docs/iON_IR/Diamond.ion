@@ -1,0 +1,17 @@
+INIT_BLOCK: 
+    MOV %1, 5
+    JMP MAIN_BLOCK
+
+MAIN_BLOCK:
+    BEQ %1, 5, COND_1, COND_2
+
+COND_1:
+    MOV %1, 1
+    JMP RET_BLOCK
+
+COND_2:
+    MOV %1, -1
+    JMP RET_BLOCK
+
+RET_BLOCK:
+    RET
