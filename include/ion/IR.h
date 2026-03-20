@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <optional>
 #include <variant>
 #include <array>
@@ -9,7 +10,7 @@ struct VReg {
     // A VR is represented as %42
     int id;
     bool operator==(const VReg& other) const { return id == other.id; }
-}
+};
 
 /* Helper for container of size 2 for the operands w/o overhead of dynamically sized container */
 struct OpContainer {
@@ -30,17 +31,18 @@ struct OpContainer {
     size_t size() const { return currentSize; }
     auto begin() { return operands.begin(); }
     auto end() { return operands.begin() + currentSize; }
-}
+};
 
 enum class OpCode {
     ADD, SUB, MUL,
     // AND, OR, XOR,
-    LOAD, STORE, MOV
+    LOAD, STORE, MOV,
     RET, JMP,
     // CMP
     BEQ, BZ, BNZ /* BNE, BGT, BLT, BLE... */
-}
+};
 
+using Operands = std::variant</* const val */int, /* use */VReg>;
 struct Instruction {
     /**
     An instruction can be of 7 different forms:
@@ -59,9 +61,8 @@ struct Instruction {
     std::array<std::optional<std::string>, 2> labels;
 
     // may need to use std::monostate
-    using Operands = std::variant</* const val */int, /* use */VReg>;
     std::array<Operands, 2> operands;
 
     // The container represents the operands
     // OpContainer container;
-}
+};

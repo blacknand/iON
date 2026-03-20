@@ -1,6 +1,6 @@
 #include "utils/h/Parser.h"
 
-std::optional<ParsedInstr> InstrParser parse(std::string_view line) {
+std::optional<ParsedInstr> InstrParser::parse(std::string_view line) {
     line = trim(line);
     if (line.empty()) return std::nullopt;
 
@@ -22,6 +22,11 @@ std::optional<ParsedInstr> InstrParser parse(std::string_view line) {
     Form form = classify(toks[0]);
     instr.form = form;
 
+    // Converts a parsed Operand token into the IR Operands variant
+    auto toOperands = [](Operand op) -> Operands {
+        return (op.kind == Operand::VR) ? Operands{VReg{op.value}} : Operands{op.value};
+    };
+
     switch (form) {
     case ParsedInstr::Ret:
         // RET — nothing to extract
@@ -35,29 +40,29 @@ std::optional<ParsedInstr> InstrParser parse(std::string_view line) {
 
     case ParsedInstr::LoadImm:
         // LOADI %1, 42
-        instr.def = parse_operand(toks[1]);
-        instr.uses[0] = parse_operand(toks[2]); // the constant
+        instr.def = VReg{parse_operand(toks[1]).value};
+        instr.uses[0] = toOperands(parse_operand(toks[2]));
         instr.use_count = 1;
         break;
 
     case ParsedInstr::Copy:
         // MOV %1, %2  (def = %1, use = %2)
-        instr.def = parse_operand(toks[1]);
-        instr.uses[0] = parse_operand(toks[2]);
+        instr.def = VReg{parse_operand(toks[1]).value};
+        instr.uses[0] = toOperands(parse_operand(toks[2]));
         instr.use_count = 1;
         break;
 
     case ParsedInstr::BinaryOp:
         // ADD %1, %2, %3  (def = %1, uses = %2, %3)
-        instr.def = parse_operand(toks[1]);
-        instr.uses[0] = parse_operand(toks[2]);
-        instr.uses[1] = parse_operand(toks[3]);
+        instr.def = VReg{parse_operand(toks[1]).value};
+        instr.uses[0] = toOperands(parse_operand(toks[2]));
+        instr.uses[1] = toOperands(parse_operand(toks[3]));
         instr.use_count = 2;
         break;
 
     case ParsedInstr::CondBranch1:
         // NZ %1, T1, T2
-        instr.uses[0] = parse_operand(toks[1]);
+        instr.uses[0] = toOperands(parse_operand(toks[1]));
         instr.use_count = 1;
         instr.targets[0] = toks[2];
         instr.targets[1] = toks[3];
@@ -66,8 +71,8 @@ std::optional<ParsedInstr> InstrParser parse(std::string_view line) {
 
     case ParsedInstr::CondBranch2:
         // BEQ %1, %2, T1, T2
-        instr.uses[0] = parse_operand(toks[1]);
-        instr.uses[1] = parse_operand(toks[2]);
+        instr.uses[0] = toOperands(parse_operand(toks[1]));
+        instr.uses[1] = toOperands(parse_operand(toks[2]));
         instr.use_count = 2;
         instr.targets[0] = toks[3];
         instr.targets[1] = toks[4];
@@ -82,8 +87,8 @@ std::optional<ParsedInstr> InstrParser parse(std::string_view line) {
 }
 
 
-// Map opcode string -> form. You fill this in with your actual ISA.
-static Form InstrParser::classify(std::string_view op) {
+// Map opcode string -> form.
+InstrParser::Form InstrParser::classify(std::string_view op) {
     // Binary ops
     if (op == "ADD" || op == "SUB" || op == "MUL" ||
         op == "DIV" || op == "AND" || op == "OR")
@@ -104,7 +109,7 @@ static Form InstrParser::classify(std::string_view op) {
 }
 
 // Split line on commas and whitespace into token buffer. Zero alloc.
-static int InstrParser::tokenize(std::string_view line, std::array<std::string_view, 6>& out) {
+int InstrParser::tokenize(std::string_view line, std::array<std::string_view, 6>& out) {
     int count = 0;
     size_t i = 0;
 
@@ -124,7 +129,7 @@ static int InstrParser::tokenize(std::string_view line, std::array<std::string_v
     return count;
 }
 
-static Operand InstrParser::parse_operand(std::string_view tok) {
+Operand InstrParser::parse_operand(std::string_view tok) {
     if (tok.front() == '%') {
         int32_t reg = 0;
         std::from_chars(tok.data() + 1, tok.data() + tok.size(), reg);
@@ -136,7 +141,7 @@ static Operand InstrParser::parse_operand(std::string_view tok) {
     return Operand::imm(val);
 }
 
-static std::string_view InstrParser::trim(std::string_view s) {
+std::string_view InstrParser::trim(std::string_view s) {
     while (!s.empty() && (s.front() == ' ' || s.front() == '\t')) s.remove_prefix(1);
     while (!s.empty() && (s.back() == ' ' || s.back() == '\t'))  s.remove_suffix(1);
     return s;

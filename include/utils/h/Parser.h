@@ -58,4 +58,4 @@ private:
     static int tokenize(std::string_view line, std::array<std::string_view, 6>& out);
     static Operand parse_operand(std::string_view tok);
     static std::string_view trim(std::string_view s);
-}
+};

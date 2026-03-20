@@ -1,4 +1,7 @@
 #include <gtest/gtest.h>
+#include "CFG.h"
+#include <memory>
+#include <string>
 
 
 class LivenessAnalysisTest : public ::testing::Test {

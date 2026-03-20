@@ -2,6 +2,7 @@
 
 #include "IR.h"
 
+#include <string>
 #include <vector>
 #include <memory>
 #include <unordered_map>
@@ -19,10 +20,10 @@ struct BasicBlock {
     */
     std::vector<BasicBlock*> predecessors;
     std::vector<BasicBlock*> successors;
-}
+};
 
 struct Function {
-    std::string name
+    std::string name;
     std::vector<std::unique_ptr<BasicBlock>> blocks;
-    std::unordered_map<std::string, std::unique_ptr<BasicBlock>> labelToBlock;
-}
+    std::unordered_map<std::string, BasicBlock*> labelToBlock;
+};

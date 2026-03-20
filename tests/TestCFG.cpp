@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
 
-class CFGTest : public ::Testing::Test {
+class CFGTest : public ::testing::Test {
 protected:
-}
+};

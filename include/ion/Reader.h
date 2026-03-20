@@ -19,7 +19,10 @@ class Reader {
 public:
     Function BuildCFG(const std::string& filename);
 private:
-    void FindLeaders();
-    Function BuildGraph();
-    Function func;
+    void FindLeaders(const std::string& filename);
+    void BuildGraph();
+    // TODO: Make func name the filename
+    Function func{
+        .name = "default_func"
+    };
 };

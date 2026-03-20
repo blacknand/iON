@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IR.h"
+#include "CFG.h"
 
 #include <map>
 #include <bitset>

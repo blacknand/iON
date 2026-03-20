@@ -7,12 +7,12 @@ LivenessInfo computeUseDef(Function& fn) {
     for (const auto &block : fn.blocks) {
         // Get initial number of VRegs
         int maxID = 1;
-        for (const auto& instr : block->instrs) {
-            if (auto* def = std::get_if<VReg>(&instr.def)) {
-                maxID = std::max(maxID, def->id);
+        for (const auto& instr : block->instructions) {
+            if (instr.def.has_value()) {
+                maxID = std::max(maxID, instr.def->id);
             }
 
-            for (const auto &use : instr.uses) {
+            for (const auto &use : instr.operands) {
                 if (auto* reg = std::get_if<VReg>(&use)) {
                     maxID = std::max(maxID, reg->id);
                 }
@@ -25,11 +25,11 @@ LivenessInfo computeUseDef(Function& fn) {
         std::vector<bool> varkill(numVars, false);
         li.UEVar.insert({block->id, uevar});
         li.VarKill.insert({block->id, varkill});
-        int k = block->instrs.size();
+        int k = block->instructions.size();
         for (int i = 0; i < k; ++i) {
-            Instruction instr = block->instrs[i];       
-            std::variant<std::monostate, VReg> def = instr.def;
-            std::vector<Operand> uses = instr.uses;
+            const Instruction& instr = block->instructions[i];
+            const std::optional<VReg>& def = instr.def;
+            const auto& uses = instr.operands;
 
             for (const auto &var : uses) {
                 if (std::holds_alternative<VReg>(var)) {
@@ -41,9 +41,8 @@ LivenessInfo computeUseDef(Function& fn) {
             }
 
             // Add x (operand) to VarKill unconditionally
-            // check not std::monostate first
-            if (std::holds_alternative<VReg>(def)) {
-                VReg x = std::get<VReg>(def);
+            if (def.has_value()) {
+                VReg x = def.value();
                 li.VarKill[block->id][x.id] = true;
             }
 
@@ -72,7 +71,7 @@ LivenessResult LivenessAnalysis::analyse(Function& fn) {
             std::set<int> newLiveOutSet = {};
 
             // LiveOut(B) = S ∈ succs(B) ⋃ ​(UEVar(S) ∪ (LiveOut(S) − VarKill(S)))
-            for (const auto& block : fn.blocks[i]->succs) {
+            for (const auto& block : fn.blocks[i]->successors) {
                 std::vector<bool> UEVar = li.UEVar[block->id];
                 std::vector<bool> VarKill = li.VarKill[block->id];
                 std::set<int> LiveOut = lr.liveoutSet[block->id];
@@ -92,7 +91,8 @@ LivenessResult LivenessAnalysis::analyse(Function& fn) {
                         UEVar_U_LiveOut_NotVarKill.insert(u);
                     }
                 }
-                
+                UEVar_U_LiveOut_NotVarKill.insert(LiveOut_NotVarKill.begin(), LiveOut_NotVarKill.end());
+
                 newLiveOutSet.insert(UEVar_U_LiveOut_NotVarKill.begin(), UEVar_U_LiveOut_NotVarKill.end());
             }
 
@@ -125,6 +125,7 @@ LivenessResult LivenessAnalysis::analyse(Function& fn) {
                 UEVar_U_LiveOut_NotVarKill.insert(u);
             }
         }
+        UEVar_U_LiveOut_NotVarKill.insert(LiveOut_NotVarKill.begin(), LiveOut_NotVarKill.end());
 
         lr.liveinSet[fn.blocks[i]->id] = UEVar_U_LiveOut_NotVarKill;
     }
