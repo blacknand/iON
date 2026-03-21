@@ -61,7 +61,7 @@ TEST_F(StraightLineDAGTest, Test_INIT_BLOCK) {
 
     EXPECT_EQ(INIT_BLOCK->instructions[2].labels[0], "BLOCK_B");
 
-
+    EXPECT_EQ(INIT_BLOCK->successors[0]->label, "BLOCK_B");
 }
 
 TEST_F(StraightLineDAGTest, Test_BLOCK_B) {
@@ -80,16 +80,25 @@ TEST_F(StraightLineDAGTest, Test_BLOCK_B) {
 
     EXPECT_THAT(BLOCK_B->instructions[1].labels[0], "BLOCK_C");
     EXPECT_THAT(BLOCK_B->instructions[1].labels[1], "BLOCK_X");
+
+    EXPECT_EQ(BLOCK_B->predecessors[0]->label, "INIT_BLOCK");
+    EXPECT_EQ(BLOCK_B->successors[0]->label, "BLOCK_C");
+    EXPECT_EQ(BLOCK_B->successors[1]->label, "BLOCK_X");
 }
+
 
 TEST_F(StraightLineDAGTest, Test_BLOCK_C) {
     BasicBlock* BLOCK_C = func->labelToBlock["BLOCK_C"];
+
+    EXPECT_EQ(BLOCK_C->predecessors[0]->label, "BLOCK_B");
 
     EXPECT_EQ(BLOCK_C->instructions[0].op, OpCode::RET);
 }
 
 TEST_F(StraightLineDAGTest, Test_BLOCK_X) {
     BasicBlock* BLOCK_X = func->labelToBlock["BLOCK_X"];
+
+    EXPECT_EQ(BLOCK_X->predecessors[0]->label, "BLOCK_B");
 
     EXPECT_EQ(BLOCK_X->instructions[0].op, OpCode::RET);
 }
