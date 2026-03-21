@@ -5,6 +5,7 @@
 #include <variant>
 #include <array>
 #include <stdexcept>
+#include <ostream>
 
 struct VReg {
     // A VR is represented as %42
@@ -42,7 +43,7 @@ enum class OpCode {
     BEQ, BZ, BNZ /* BNE, BGT, BLT, BLE... */
 };
 
-using Operands = std::variant</* const val */int, /* use */VReg>;
+using Operands = std::variant<std::monostate, /* const val */int, /* use */VReg>;
 struct Instruction {
     /**
     An instruction can be of 7 different forms:
@@ -66,3 +67,66 @@ struct Instruction {
     // The container represents the operands
     // OpContainer container;
 };
+
+inline std::ostream& operator<<(std::ostream& os, const VReg& v) {
+    return os << "%" << v.id;
+}
+
+inline std::ostream& operator<<(std::ostream& os, OpCode op) {
+    switch (op) {
+        case OpCode::ADD:   return os << "ADD";
+        case OpCode::SUB:   return os << "SUB";
+        case OpCode::MUL:   return os << "MUL";
+        case OpCode::LOAD:  return os << "LOAD";
+        case OpCode::STORE: return os << "STORE";
+        case OpCode::MOV:   return os << "MOV";
+        case OpCode::RET:   return os << "RET";
+        case OpCode::JMP:   return os << "JMP";
+        case OpCode::BEQ:   return os << "BEQ";
+        case OpCode::BZ:    return os << "BZ";
+        case OpCode::BNZ:   return os << "BNZ";
+    }
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Operands& op) {
+    std::visit([&os](const auto& val) {
+        using T = std::decay_t<decltype(val)>;
+        if constexpr (std::is_same_v<T, std::monostate>)
+            return;
+        else
+            os << val;
+    }, op);
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Instruction& instr) {
+    // def
+    if (instr.def.has_value())
+        os << "def = " << instr.def.value() << "; OpCode = ";
+
+    // opcode
+    os << instr.op << "; "; // assumes OpCode has a << overload
+
+    // operands
+    bool first = true;
+    for (const auto& operand : instr.operands) {
+        if (std::holds_alternative<std::monostate>(operand))
+            continue;
+        // skip default-constructed operands (int 0 is ambiguous,
+        // so you may want a std::monostate sentinel instead)
+        if (!first) os << ", ";
+        else os << " operands = [";
+        os << operand;
+        first = false;
+    }
+    os << "]; labels = ";
+
+    // labels
+    for (const auto& label : instr.labels) {
+        if (label.has_value())
+            os << " " << label.value();
+    }
+
+    return os;
+}

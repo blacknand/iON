@@ -26,6 +26,7 @@ add_library(ion_lib
 target_include_directories(ion_lib PUBLIC
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/ion
+    ${CMAKE_SOURCE_DIR}/tests/utils
 )
 
 # Compiler warnings for library
@@ -69,7 +70,7 @@ if(ION_BUILD_TESTS)
             tests/TestCFG.cpp
             tests/TestLiveness.cpp
         )
-        target_link_libraries(ion_test_gtest PRIVATE ion_lib GTest::gtest_main)
+        target_link_libraries(ion_test_gtest PRIVATE ion_lib GTest::gtest_main GTest::gmock)
         
         include(GoogleTest)
         gtest_discover_tests(ion_test_gtest)
