@@ -1,0 +1,14 @@
+digraph CFG {
+    node [shape=box];
+
+    "0x8b100c310" [label="INIT_BLOCK"];
+    "0x8b100c310" -> "0x8b100c1c0";
+    "0x8b100c1c0" [label="MAIN_BLOCK"];
+    "0x8b100c1c0" -> "0x8b100c150";
+    "0x8b100c1c0" -> "0x8b100c070";
+    "0x8b100c150" [label="COND_1"];
+    "0x8b100c150" -> "0x8b100c380";
+    "0x8b100c070" [label="COND_2"];
+    "0x8b100c070" -> "0x8b100c380";
+    "0x8b100c380" [label="RET_BLOCK"];
+}

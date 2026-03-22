@@ -37,7 +37,7 @@ TEST_F(NestedLoopTest, Test_OUTER_BLOCK) {
     EXPECT_EQ(OUTER_BLOCK->successors[1]->label, "OUTER_BODY"); 
 }
 
-TEST_F(NestedLoopTest, Test_INNER_BLOCK) {
+TEST_F(NestedLoopTest, Test_OUTER_BODY) {
     BasicBlock* OUTER_BODY = func->labelToBlock["OUTER_BODY"];
 
     EXPECT_EQ(OUTER_BODY->predecessors[0]->label, "OUTER_BLOCK");
@@ -49,7 +49,7 @@ TEST_F(NestedLoopTest, Test_INNER_BLOCK) {
 
     EXPECT_EQ(INNER_BLOCK->successors[0]->label, "RET_BLOCK");
     EXPECT_EQ(INNER_BLOCK->successors[1]->label, "INNER_BODY");
-    EXPECT_EQ(INNER_BLOCK->predecessors[1]->label, "INNER_BLOCK");
+    EXPECT_EQ(INNER_BLOCK->predecessors[0]->label, "OUTER_BLOCK");
 }
 
 TEST_F(NestedLoopTest, Test_RET_BLOCK) {
