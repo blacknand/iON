@@ -1,0 +1,13 @@
+INIT_BLOCK:
+    MOV %1, 0
+    JMP main_block
+
+main_block:
+    BEQ %1, 40, BLOCK_C, BLOCK_A
+
+BLOCK_A:
+    ADD %1, %1, 1
+    JMP main_block
+
+BLOCK_C:
+    RET 

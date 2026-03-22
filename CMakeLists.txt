@@ -37,12 +37,27 @@ else()
 endif()
 
 # Debug build settings
+# if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+#     # Debug symbols and no optimization for LLDB
+#     add_compile_options(-g -O0)
+#     # ASan, LSan, UBSan
+#     add_compile_options(-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer)
+#     add_link_options(-fsanitize=address -fsanitize=undefined)
+# endif()
+
+# Debug build settings
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    # Debug symbols and no optimization for LLDB
+    # Debug symbols and no optimization for LLDB/GDB
     add_compile_options(-g -O0)
-    # ASan, LSan, UBSan
-    add_compile_options(-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer)
-    add_link_options(-fsanitize=address -fsanitize=undefined)
+    
+    # Homebrew GCC on macOS does not include ASan/UBSan libraries. 
+    # Enable sanitizers only if we are NOT using GNU on Darwin (macOS).
+    if (NOT (CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU"))
+        add_compile_options(-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer)
+        add_link_options(-fsanitize=address -fsanitize=undefined)
+    else()
+        message(STATUS "Sanitizers disabled: GCC on macOS lacks ASan/UBSan libraries.")
+    endif()
 endif()
 
 # Main executable
@@ -67,12 +82,15 @@ if(ION_BUILD_TESTS)
 
         # GoogleTest executable
         add_executable(ion_test_gtest
-            tests/TestCFG.cpp
+            tests/TestStraightLineDAG_CFG.cpp
+            tests/TestNestedLoopCFG.cpp
+            tests/TestSimpleLoopCFG.cpp
+            tests/TestDiamondCFG.cpp
             tests/TestLiveness.cpp
         )
         target_link_libraries(ion_test_gtest PRIVATE ion_lib GTest::gtest_main GTest::gmock)
         
         include(GoogleTest)
-        gtest_discover_tests(ion_test_gtest)
+        gtest_discover_tests(ion_test_gtest WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
     endif()
 endif()

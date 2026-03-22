@@ -113,8 +113,8 @@ void Reader::FindLeaders(const std::string& filename) {
             blockInstructions.push_back(Instruction{
                 .op       = toOpCode(inner->opcode),
                 .def      = inner->def,
-                .operands = inner->uses,
-                .labels   = labels
+                .labels   = labels,
+                .operands = inner->uses
             });
             ++i;
         }
