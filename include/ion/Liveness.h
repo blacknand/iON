@@ -30,6 +30,7 @@ struct LivenessResult {
     std::map<int, std::set<int>> liveinSet;     
 };
 
+// TODO: Fix design; not great for usability
 LivenessInfo computeUseDef(Function& fn);
 
 class LivenessAnalysis {

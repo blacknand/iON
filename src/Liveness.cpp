@@ -100,11 +100,12 @@ LivenessResult LivenessAnalysis::analyse(Function& fn) {
                 std::set<int> LiveOut_NotVarKill = {};
 
                 /* Add all of non-varkill values into set */
-                for (const int& x : LiveOut) {
+                for (const int& x : VarKill) {
                     if (!VarKill[x]) {
                         LiveOut_NotVarKill.insert(x);
                     }
                 }
+                LiveOut_NotVarKill.insert(LiveOut.begin(), LiveOut.end());
 
                 /* Set for UEVar(S) ∪ (LiveOut(S) − VarKill(S) */
                 std::set<int> UEVar_U_LiveOut_NotVarKill = {};
@@ -139,11 +140,12 @@ LivenessResult LivenessAnalysis::analyse(Function& fn) {
         std::vector<bool> VarKill = li.VarKill[fn.blocks[i]->id];
         std::set<int> LiveOut = lr.liveoutSet[fn.blocks[i]->id];
         std::set<int> LiveOut_NotVarKill = {};
-        for (const int& x : LiveOut) {
+        for (const int& x : VarKill) {
             if (!VarKill[x]) {
                 LiveOut_NotVarKill.insert(x);
             }
         }
+        LiveOut_NotVarKill.insert(LiveOut.begin(), LiveOut.end());
 
         // Set for UEVar(B) ∪ (LiveOut(B) − VarKill(B)
         std::set<int> UEVar_U_LiveOut_NotVarKill = {};
@@ -151,7 +153,7 @@ LivenessResult LivenessAnalysis::analyse(Function& fn) {
             if (UEVar[u]) {
                 UEVar_U_LiveOut_NotVarKill.insert(u);
             }
-        }
+        }       
         UEVar_U_LiveOut_NotVarKill.insert(LiveOut_NotVarKill.begin(), LiveOut_NotVarKill.end());
 
         lr.liveinSet[fn.blocks[i]->id] = UEVar_U_LiveOut_NotVarKill;

@@ -3,6 +3,8 @@
 #include "ion/CFG.h"
 #include "ion/Reader.h"
 
+#include "utils/OutputStreamHandling.h"
+
 #include <gtest/gtest.h>
 #include <memory>
 
@@ -10,6 +12,7 @@ namespace {
 class LivenessAnalysisTest : public ::testing::Test {
 protected:
     static Function* dagFN, *simpleLoopFN, *nestedLoopFN, *diamondFN;
+    static LivenessAnalysis la;
 
     static void SetUpTestSuite() {
         Reader r_dag, r_simple, r_nested, r_diamond;
@@ -31,6 +34,7 @@ protected:
     }
 };
 
+LivenessAnalysis LivenessAnalysisTest::la;
 Function* LivenessAnalysisTest::dagFN = nullptr;
 Function* LivenessAnalysisTest::simpleLoopFN = nullptr;
 Function* LivenessAnalysisTest::nestedLoopFN = nullptr;
@@ -85,51 +89,147 @@ TEST_F(LivenessAnalysisTest, Analyse_DAG) {
 }
 
 TEST_F(LivenessAnalysisTest, Analyse_SimpleLoop) {
-    /** 
-        + m = successor blocks of n
-        + n = current block
-    */
+    LivenessResult lr = la.analyse(*simpleLoopFN);
 
     /** INIT_BLOCK
-        + VarKill(m) = {%1}
-        + UEVar(m) = {}
-        + LiveOut(n) = {}
-        + LiveOut(m) ∩ ¬VarKill(m) = {}
-        + UEVar(m) ∪ (LiveOut(m) ∩ ¬VarKill(m)) = LiveIn = {}
+        + VarKill = {%1}
+        + UEVar = {}
+        + LiveOut = {%1}
+        + LiveOut ∩ ¬VarKill = {}
+        + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {}
     */
 
+    std::set<int> LiveOut_INIT_BLOCK = lr.liveoutSet[0];
+    ASSERT_TRUE(LiveOut_INIT_BLOCK.count(1));
+
     /** main_block
-        + VarKill(m) = {}
-        + UEVar(m) = {%1}
-        + LiveOut = {}
+        + VarKill = {}
+        + UEVar = {%1}
+        + LiveOut = {%1}
+        + LiveOut ∩ ¬VarKill = {%1}
+        + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {%1}
+    */
+    std::set<int> LiveOut_main_block = lr.liveoutSet[1];
+    std::set<int> LiveIn_main_block = lr.liveinSet[1];
+    ASSERT_TRUE(LiveOut_main_block.count(1));
+    ASSERT_TRUE(LiveIn_main_block.count(1));
+
+    /** BLOCK_A
+        + VarKill = {%1}
+        + UEVar = {%1}
+        + LiveOut = {%1}
         + LiveOut ∩ ¬VarKill = {}
         + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {%1}
     */
-
-    /** BLOCK_A
-        + VarKill(m) = {%1}
-        + UEVar(m) = {%1}
-        + LiveOut(n) = {}
-        + LiveOut(m) ∩ ¬VarKill(m) = {}
-        + UEVar(m) ∪ (LiveOut(m) ∩ ¬VarKill(m)) = LiveIn(n) = {%1}
-    */
+    std::set<int> LiveOut_BLOCK_A = lr.liveoutSet[2];
+    std::set<int> LiveIn_BLOCK_A = lr.liveinSet[2];
+    ASSERT_TRUE(LiveOut_BLOCK_A.count(1));
+    ASSERT_TRUE(LiveIn_BLOCK_A.count(1));
 
     /** BLOCK_C
         + Can ignore
-        + VarKill(m) = {}
-        + UEVar(m) = {}
-        + LiveOut(n) = {}
-        + LiveOut(m) ∩ ¬VarKill(m) = {}
-        + UEVar(m) ∪ (LiveOut(m) ∩ ¬VarKill(m)) = LiveIn = {}
+        + VarKill = {}
+        + UEVar = {}
+        + LiveOut = {}
+        + LiveOut ∩ ¬VarKill = {}
+        + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {}
     */
 }
 
 TEST_F(LivenessAnalysisTest, Analyse_NestedLoop) {
+    LivenessResult lr = la.analyse(*nestedLoopFN);
 
+    /** INIT_BLOCK
+        + VarKill = {%1, %2}
+        + UEVar = {}
+        + LiveOut = {%1, %2}
+        + LiveOut ∩ ¬VarKill = {}
+        + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {}
+    */
+    std::set<int> LiveOut_INIT_BLOCK = lr.liveoutSet[0];
+    ASSERT_TRUE(LiveOut_INIT_BLOCK.count(1));
+    ASSERT_TRUE(LiveOut_INIT_BLOCK.count(2));
+
+    /** OUTER_BLOCK
+        + VarKill = {}
+        + UEVar = {%1}
+        + LiveOut = {%1, %2}
+        + LiveOut ∩ ¬VarKill = {%1, %2}
+        + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {%1, %2}
+    */
+    std::set<int> LiveOut_OUTER_BLOCK = lr.liveoutSet[1];
+    std::set<int> LiveIn_OUTER_BLOCK = lr.liveoutSet[1];
+    ASSERT_TRUE(LiveOut_OUTER_BLOCK.count(1));
+    ASSERT_TRUE(LiveOut_OUTER_BLOCK.count(2));
+    ASSERT_TRUE(LiveIn_OUTER_BLOCK.count(1));
+    ASSERT_TRUE(LiveIn_OUTER_BLOCK.count(2));
+
+    /** OUTER_BODY
+        + VarKill = {%1}
+        + UEVar = {%1}
+        + LiveOut = {%1, %2}
+        + LiveOut ∩ ¬VarKill = {%2}
+        + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {%1, %2}
+    */
+    std::set<int> LiveOut_OUTER_BODY = lr.liveoutSet[2];
+    std::set<int> LiveIn_OUTER_BODY = lr.liveoutSet[2];
+    ASSERT_TRUE(LiveOut_OUTER_BODY.count(1));
+    ASSERT_TRUE(LiveOut_OUTER_BODY.count(2));
+    ASSERT_TRUE(LiveIn_OUTER_BODY.count(1));
+    ASSERT_TRUE(LiveIn_OUTER_BODY.count(2));
+
+    /** INNER_BLOCK
+        + VarKill = {}
+        + UEVar = {%2}
+        + LiveOut = {%1, %2}
+        + LiveOut ∩ ¬VarKill = {%1, %2}
+        + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {%1, %2}
+    */
+    std::set<int> LiveOut_INNER_BLOCK = lr.liveoutSet[2];
+    std::set<int> LiveIn_INNER_BLOCK = lr.liveoutSet[2];
+    ASSERT_TRUE(LiveOut_INNER_BLOCK.count(1));
+    ASSERT_TRUE(LiveOut_INNER_BLOCK.count(2));
+    ASSERT_TRUE(LiveIn_INNER_BLOCK.count(1));
+    ASSERT_TRUE(LiveIn_INNER_BLOCK.count(2));
+
+    /** INNER_BODY
+        + VarKill = {%2}
+        + UEVar = {%2}
+        + LiveOut = {%1, %2}
+        + LiveOut ∩ ¬VarKill = {%1}
+        + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {%1, %2}
+    */
+    std::set<int> LiveOut_INNER_BODY = lr.liveoutSet[2];
+    std::set<int> LiveIn_INNER_BODY = lr.liveoutSet[2];
+    ASSERT_TRUE(LiveOut_INNER_BODY.count(1));
+    ASSERT_TRUE(LiveOut_INNER_BODY.count(2));
+    ASSERT_TRUE(LiveIn_INNER_BODY.count(1));
+    ASSERT_TRUE(LiveIn_INNER_BODY.count(2));
+
+    /** RET_BLOCK
+        + VarKill = {%3}
+        + UEVar = {%1, %2}
+        + LiveOut = {}
+        + LiveOut ∩ ¬VarKill = {}
+        + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {%1, %2}
+    */
+    std::set<int> LiveOut_RET_BLOCK = lr.liveoutSet[2];
+    std::set<int> LiveIN_RET_BLOCK = lr.liveoutSet[2];
+    ASSERT_TRUE(LiveOut_RET_BLOCK.count(1));
+    ASSERT_TRUE(LiveOut_RET_BLOCK.count(2));
+    ASSERT_TRUE(LiveIn_RET_BLOCK.count(1));
+    ASSERT_TRUE(LiveIn_RET_BLOCK.count(2));
 }
 
 TEST_F(LivenessAnalysisTest, Analyse_Diamond) {
 
+}
+
+int main(int argc, char** argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    auto& listeners = ::testing::UnitTest::GetInstance()->listeners();
+    listeners.Append(new OutputCapture);
+    return RUN_ALL_TESTS();
 }
 
 }       // namespace
