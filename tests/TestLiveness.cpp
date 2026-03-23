@@ -36,10 +36,10 @@ Function* LivenessAnalysisTest::simpleLoopFN = nullptr;
 Function* LivenessAnalysisTest::nestedLoopFN = nullptr;
 Function* LivenessAnalysisTest::diamondFN = nullptr;
 
-TEST_F(LivenessAnalysisTest, GatherInitialInfo_DAG) {
-
-}
-
+/**
+    The UEVar and VarKill sets are calculated independent
+    of the CFG shape, so only one test (IR program) is sufficient.
+*/
 TEST_F(LivenessAnalysisTest, GatherInitialInfo_SimpleLoop) {
     LivenessInfo li = computeUseDef(*simpleLoopFN);
 
@@ -67,21 +67,61 @@ TEST_F(LivenessAnalysisTest, GatherInitialInfo_SimpleLoop) {
     ASSERT_TRUE(UEVar_BLOCK_A[1]);
 
     /** BLOCK_C
+        + Can ignore
         + UEVar = {}
         + VarKill = {}
      */
 }
 
-TEST_F(LivenessAnalysisTest, GatherInitialInfo_NestedLoop) {
-}
-
-TEST_F(LivenessAnalysisTest, GatherInitialInfo_Diamond) {
-}
-
+/**
+    LiveIn and LiveOut sets must be tested on each IR program (shape),
+    the iterative solcver propogates information across CFG edges
+    and repeats until convergence.
+*/
 TEST_F(LivenessAnalysisTest, Analyse_DAG) {
+    /** 
+
+    */
 }
 
 TEST_F(LivenessAnalysisTest, Analyse_SimpleLoop) {
+    /** 
+        + m = successor blocks of n
+        + n = current block
+    */
+
+    /** INIT_BLOCK
+        + VarKill(m) = {%1}
+        + UEVar(m) = {}
+        + LiveOut(n) = {}
+        + LiveOut(m) ∩ ¬VarKill(m) = {}
+        + UEVar(m) ∪ (LiveOut(m) ∩ ¬VarKill(m)) = LiveIn = {}
+    */
+
+    /** main_block
+        + VarKill(m) = {}
+        + UEVar(m) = {%1}
+        + LiveOut = {}
+        + LiveOut ∩ ¬VarKill = {}
+        + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {%1}
+    */
+
+    /** BLOCK_A
+        + VarKill(m) = {%1}
+        + UEVar(m) = {%1}
+        + LiveOut(n) = {}
+        + LiveOut(m) ∩ ¬VarKill(m) = {}
+        + UEVar(m) ∪ (LiveOut(m) ∩ ¬VarKill(m)) = LiveIn(n) = {%1}
+    */
+
+    /** BLOCK_C
+        + Can ignore
+        + VarKill(m) = {}
+        + UEVar(m) = {}
+        + LiveOut(n) = {}
+        + LiveOut(m) ∩ ¬VarKill(m) = {}
+        + UEVar(m) ∪ (LiveOut(m) ∩ ¬VarKill(m)) = LiveIn = {}
+    */
 }
 
 TEST_F(LivenessAnalysisTest, Analyse_NestedLoop) {

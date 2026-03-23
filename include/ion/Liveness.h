@@ -7,11 +7,12 @@
 #include <bitset>
 #include <set>
 
-
 struct LivenessInfo {
     // Block ID -> set
-    // vector is indexed by register number/variable ID,
-    // so UEVar[5][5] would be %5 if true
+    /** 
+        vector is indexed by register number/variable ID,
+        so UEVar[5][5] would be %5 if true 
+    */
     std::map<int, std::vector<bool>> UEVar;
     std::map<int, std::vector<bool>> VarKill;
 };
@@ -20,7 +21,7 @@ struct LivenessInfo {
 struct LivenessResult {
     // Block ID -> set
     /* 
-        NOTE: Because the CFG constructor and tests 
+        NOTE: Because the CFG constructor and CFG tests 
         rely on a lookup table using the block label as the key,
         it may be a better idea to convert the sets to use
         label rather than using block ID

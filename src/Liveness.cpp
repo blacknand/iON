@@ -1,3 +1,13 @@
+/**
+    Performs liveness analysis on the iON IR. Liveness.cpp
+    is composed of two functions, computeUseDef which is responsible
+    for gathering the initial information to create the UEVar and VarKill
+    sets, which are then used by LivenessAnalysis::analyse to
+    compute the LiveIn and LiveOut sets. The analysis is performed
+    on the CFG in a RPO traversal, since the computations
+    performed proogate backwards through the graph.
+*/
+
 #include "Liveness.h"
 
 LivenessInfo computeUseDef(Function& fn) {
