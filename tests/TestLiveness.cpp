@@ -214,7 +214,7 @@ TEST_F(LivenessAnalysisTest, Analyse_NestedLoop) {
         + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {%1, %2}
     */
     std::set<int> LiveOut_RET_BLOCK = lr.liveoutSet[2];
-    std::set<int> LiveIN_RET_BLOCK = lr.liveoutSet[2];
+    std::set<int> LiveIn_RET_BLOCK = lr.liveoutSet[2];
     ASSERT_TRUE(LiveOut_RET_BLOCK.count(1));
     ASSERT_TRUE(LiveOut_RET_BLOCK.count(2));
     ASSERT_TRUE(LiveIn_RET_BLOCK.count(1));
