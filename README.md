@@ -37,3 +37,6 @@ cmake --build build
 
 ## Testing
 iON uses GoogleTest suites for automated unit testing. There are 4 IR programs for testing all possible CFG shapes inside of `tests`.
+
+## Algorithms
+iON implements the algorithms from Engineering a Compiler, 3rd Ed. iON is much more of an experimentation than anything else.

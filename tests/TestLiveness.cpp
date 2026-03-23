@@ -37,10 +37,39 @@ Function* LivenessAnalysisTest::nestedLoopFN = nullptr;
 Function* LivenessAnalysisTest::diamondFN = nullptr;
 
 TEST_F(LivenessAnalysisTest, GatherInitialInfo_DAG) {
+
 }
 
 TEST_F(LivenessAnalysisTest, GatherInitialInfo_SimpleLoop) {
     LivenessInfo li = computeUseDef(*simpleLoopFN);
+
+    /** INIT_BLOCK
+        + UEVar = {}
+        + VarKill = {%1}
+     */
+    std::vector<bool> VarKill_INIT_BLOCK = li.VarKill[0];
+    ASSERT_TRUE(VarKill_INIT_BLOCK[1]);
+
+    /** main_block
+        + UEVar = {%1}
+        + VarKill = {}
+     */
+    std::vector<bool> UEVar_main_block  = li.UEVar[1];
+    ASSERT_TRUE(UEVar_main_block[1]);
+
+    /** BLOCK_A
+        + UEVar = {%1}
+        + VarKill = {%1}
+     */
+    std::vector<bool> VarKill_BLOCK_A = li.VarKill[2];
+    std::vector<bool> UEVar_BLOCK_A  = li.UEVar[2];
+    ASSERT_TRUE(VarKill_BLOCK_A[1]);
+    ASSERT_TRUE(UEVar_BLOCK_A[1]);
+
+    /** BLOCK_C
+        + UEVar = {}
+        + VarKill = {}
+     */
 }
 
 TEST_F(LivenessAnalysisTest, GatherInitialInfo_NestedLoop) {

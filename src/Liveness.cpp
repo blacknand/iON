@@ -1,8 +1,10 @@
 #include "Liveness.h"
 
 LivenessInfo computeUseDef(Function& fn) {
-    // Gather the initial information for liveness analysis,
-    // each block has k operations of the (generic) form "x <- y op z".
+    /* 
+        Gather the initial information for liveness analysis,
+        each block has k operations of the (generic) form "x <- y op z". 
+     **/
     LivenessInfo li;
     for (const auto &block : fn.blocks) {
         // Get initial number of VRegs
@@ -52,6 +54,10 @@ LivenessInfo computeUseDef(Function& fn) {
 }
 
 LivenessResult LivenessAnalysis::analyse(Function& fn) {
+    /**
+        Compute the LiveIn and LiveOut sets for each block
+        within the CFG (function) 
+    */
     LivenessInfo li = computeUseDef(fn);
     LivenessResult lr;
 
@@ -63,11 +69,15 @@ LivenessResult LivenessAnalysis::analyse(Function& fn) {
         lr.liveinSet[fn.blocks[i]->id] = {};
     }
 
+    /* 
+        changed is used to halt the algorithm,
+        when no changes have been made to the sets
+    **/
     bool changed = true;
     while (changed) {
         changed = false;
         for (int i = 0; i < N; i++) {
-            // Recompute LiveOut and LiveIn
+            /* Recompute LiveOut and LiveIn */
             std::set<int> newLiveOutSet = {};
 
             // LiveOut(B) = S ∈ succs(B) ⋃ ​(UEVar(S) ∪ (LiveOut(S) − VarKill(S)))
@@ -76,23 +86,30 @@ LivenessResult LivenessAnalysis::analyse(Function& fn) {
                 std::vector<bool> VarKill = li.VarKill[block->id];
                 std::set<int> LiveOut = lr.liveoutSet[block->id];
 
-                // Set for LiveOut(S) − VarKill(S)
+                /* Set for LiveOut(S) − VarKill(S) */
                 std::set<int> LiveOut_NotVarKill = {};
+
+                /* Add all of non-varkill values into set */
                 for (const int& x : LiveOut) {
                     if (!VarKill[x]) {
                         LiveOut_NotVarKill.insert(x);
                     }
                 }
 
-                // Set for UEVar(S) ∪ (LiveOut(S) − VarKill(S)
+                /* Set for UEVar(S) ∪ (LiveOut(S) − VarKill(S) */
                 std::set<int> UEVar_U_LiveOut_NotVarKill = {};
+
+                /* Add all of UEVar values into set */
                 for (size_t u = 0; u < UEVar.size(); u++) {
                     if (UEVar[u]) {
                         UEVar_U_LiveOut_NotVarKill.insert(u);
                     }
                 }
+
+                // Union LiveOut - VarKill set with UEVar set
                 UEVar_U_LiveOut_NotVarKill.insert(LiveOut_NotVarKill.begin(), LiveOut_NotVarKill.end());
 
+                // Add recomputed LiveOut set into new set
                 newLiveOutSet.insert(UEVar_U_LiveOut_NotVarKill.begin(), UEVar_U_LiveOut_NotVarKill.end());
             }
 
@@ -105,7 +122,7 @@ LivenessResult LivenessAnalysis::analyse(Function& fn) {
 
     }
 
-    // Compute LiveIn when LiveOut sets for each block, B, are solved
+    /* Compute LiveIn when LiveOut sets for each block, B, are solved */
     // LiveIn(B) = UEVar(B) ∪ (LiveOut(B) − VarKill(B))
     for (int i = 0; i < N; i++) {
         std::vector<bool> UEVar = li.UEVar[fn.blocks[i]->id];

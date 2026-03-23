@@ -19,6 +19,12 @@ struct LivenessInfo {
 // Hold the results of the equations solved
 struct LivenessResult {
     // Block ID -> set
+    /* 
+        NOTE: Because the CFG constructor and tests 
+        rely on a lookup table using the block label as the key,
+        it may be a better idea to convert the sets to use
+        label rather than using block ID
+    **/
     std::map<int, std::set<int>> liveoutSet;
     std::map<int, std::set<int>> liveinSet;     
 };
