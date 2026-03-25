@@ -4,17 +4,13 @@
 #include "CFG.h"
 
 #include <map>
-#include <bitset>
 #include <set>
+#include <boost/dynamic_bitset.hpp>
 
 struct LivenessInfo {
-    // Block ID -> set
-    /** 
-        vector is indexed by register number/variable ID,
-        so UEVar[5][5] would be %5 if true 
-    */
-    std::map<int, std::vector<bool>> UEVar;
-    std::map<int, std::vector<bool>> VarKill;
+    // Block ID -> bitset indexed by register/variable ID
+    std::map<int, boost::dynamic_bitset<>> UEVar;
+    std::map<int, boost::dynamic_bitset<>> VarKill;
 };
 
 // Hold the results of the equations solved

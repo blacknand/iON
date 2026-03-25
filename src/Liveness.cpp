@@ -33,11 +33,8 @@ LivenessInfo computeUseDef(Function& fn) {
     int numVars = globalMaxID + 1;
 
     for (const auto &block : fn.blocks) {
-        // Initialise UEVar and VarKill with the block ID and all 0s
-        std::vector<bool> uevar(numVars, false);
-        std::vector<bool> varkill(numVars, false);
-        li.UEVar.insert({block->id, uevar});
-        li.VarKill.insert({block->id, varkill});
+        li.UEVar.insert({block->id, boost::dynamic_bitset<>(numVars)});
+        li.VarKill.insert({block->id, boost::dynamic_bitset<>(numVars)});
         int k = block->instructions.size();
         for (int i = 0; i < k; ++i) {
             const Instruction& instr = block->instructions[i];
@@ -50,14 +47,14 @@ LivenessInfo computeUseDef(Function& fn) {
                     // If var NOT IN VarKill(block)
                     VReg v = std::get<VReg>(var);
                     if (!li.VarKill[block->id][v.id])
-                        li.UEVar[block->id][v.id] = true;
+                        li.UEVar[block->id].set(v.id);
                 }
             }
 
             // Add x (operand) to VarKill unconditionally
             if (def.has_value()) {
                 VReg x = def.value();
-                li.VarKill[block->id][x.id] = true;
+                li.VarKill[block->id].set(x.id);
             }
 
         }
@@ -74,89 +71,38 @@ LivenessResult LivenessAnalysis::analyse(Function& fn) {
     LivenessResult lr;
 
     int N = fn.blocks.size();
+    size_t numVars = li.UEVar.empty() ? 1 : li.UEVar.begin()->second.size();
 
-    // Initialise sets to 0
-    for (int i = 0; i < N; i++) {
-        lr.liveoutSet[fn.blocks[i]->id] = {};
-        lr.liveinSet[fn.blocks[i]->id] = {};
-    }
+    std::map<int, boost::dynamic_bitset<>> liveout;
+    for (int i = 0; i < N; i++)
+        liveout[fn.blocks[i]->id] = boost::dynamic_bitset<>(numVars);
 
-    /* 
-        changed is used to halt the algorithm,
-        when no changes have been made to the sets
-    **/
     bool changed = true;
     while (changed) {
         changed = false;
         for (int i = 0; i < N; i++) {
-            /* Recompute LiveOut and LiveIn */
-            std::set<int> newLiveOutSet = {};
+            boost::dynamic_bitset<> newLiveOut(numVars);
+            // LiveOut(B) = ⋃ S ∈ succs(B): UEVar(S) | (LiveOut(S) & ~VarKill(S))
+            for (const auto& succ : fn.blocks[i]->successors)
+                newLiveOut |= li.UEVar[succ->id] | (liveout[succ->id] & ~li.VarKill[succ->id]);
 
-            // LiveOut(B) = S ∈ succs(B) ⋃ ​(UEVar(S) ∪ (LiveOut(S) − VarKill(S)))
-            for (const auto& block : fn.blocks[i]->successors) {
-                std::vector<bool> UEVar = li.UEVar[block->id];
-                std::vector<bool> VarKill = li.VarKill[block->id];
-                std::set<int> LiveOut = lr.liveoutSet[block->id];
-
-                /* Set for LiveOut(S) − VarKill(S) */
-                std::set<int> LiveOut_NotVarKill = {};
-
-                /* Add LiveOut values that are not killed */
-                for (const int& x : LiveOut) {
-                    if (x >= (int)VarKill.size() || !VarKill[x]) {
-                        LiveOut_NotVarKill.insert(x);
-                    }
-                }
-
-                /* Set for UEVar(S) ∪ (LiveOut(S) − VarKill(S) */
-                std::set<int> UEVar_U_LiveOut_NotVarKill = {};
-
-                /* Add all of UEVar values into set */
-                for (size_t u = 0; u < UEVar.size(); u++) {
-                    if (UEVar[u]) {
-                        UEVar_U_LiveOut_NotVarKill.insert(u);
-                    }
-                }
-
-                // Union LiveOut - VarKill set with UEVar set
-                UEVar_U_LiveOut_NotVarKill.insert(LiveOut_NotVarKill.begin(), LiveOut_NotVarKill.end());
-
-                // Add recomputed LiveOut set into new set
-                newLiveOutSet.insert(UEVar_U_LiveOut_NotVarKill.begin(), UEVar_U_LiveOut_NotVarKill.end());
-            }
-
-            // If the LiveOut set has changed, update
-            if (lr.liveoutSet[fn.blocks[i]->id] != newLiveOutSet) {
+            if (liveout[fn.blocks[i]->id] != newLiveOut) {
                 changed = true;
-                lr.liveoutSet[fn.blocks[i]->id] = newLiveOutSet;
+                liveout[fn.blocks[i]->id] = newLiveOut;
             }
         }
-
     }
 
-    /* Compute LiveIn when LiveOut sets for each block, B, are solved */
-    // LiveIn(B) = UEVar(B) ∪ (LiveOut(B) − VarKill(B))
+    // Compute LiveIn and convert bitsets -> std::set<int> for LivenessResult
+    // LiveIn(B) = UEVar(B) | (LiveOut(B) & ~VarKill(B))
     for (int i = 0; i < N; i++) {
-        std::vector<bool> UEVar = li.UEVar[fn.blocks[i]->id];
-        std::vector<bool> VarKill = li.VarKill[fn.blocks[i]->id];
-        std::set<int> LiveOut = lr.liveoutSet[fn.blocks[i]->id];
-        std::set<int> LiveOut_NotVarKill = {};
-        for (const int& x : LiveOut) {
-            if (x >= (int)VarKill.size() || !VarKill[x]) {
-                LiveOut_NotVarKill.insert(x);
-            }
-        }
+        int id = fn.blocks[i]->id;
+        boost::dynamic_bitset<> liveIn = li.UEVar[id] | (liveout[id] & ~li.VarKill[id]);
 
-        // Set for UEVar(B) ∪ (LiveOut(B) − VarKill(B)
-        std::set<int> UEVar_U_LiveOut_NotVarKill = {};
-        for (size_t u = 0; u < UEVar.size(); u++) {
-            if (UEVar[u]) {
-                UEVar_U_LiveOut_NotVarKill.insert(u);
-            }
-        }       
-        UEVar_U_LiveOut_NotVarKill.insert(LiveOut_NotVarKill.begin(), LiveOut_NotVarKill.end());
-
-        lr.liveinSet[fn.blocks[i]->id] = UEVar_U_LiveOut_NotVarKill;
+        for (size_t v = liveout[id].find_first(); v != boost::dynamic_bitset<>::npos; v = liveout[id].find_next(v))
+            lr.liveoutSet[id].insert(static_cast<int>(v));
+        for (size_t v = liveIn.find_first(); v != boost::dynamic_bitset<>::npos; v = liveIn.find_next(v))
+            lr.liveinSet[id].insert(static_cast<int>(v));
     }
 
     return lr;

@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(ion LANGUAGES CXX)
 
+find_package(Boost REQUIRED)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -28,6 +30,7 @@ target_include_directories(ion_lib PUBLIC
     ${CMAKE_SOURCE_DIR}/include/ion
     ${CMAKE_SOURCE_DIR}/tests/utils
 )
+target_include_directories(ion_lib SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})
 
 # Compiler warnings for library
 if(MSVC)
@@ -74,7 +77,7 @@ if(ION_BUILD_TESTS)
         FetchContent_Declare(
             googletest
             GIT_REPOSITORY https://github.com/google/googletest.git
-            GIT_TAG v1.14.0
+            GIT_TAG v1.17.0
         )
         # Prevent overriding parent project's compiler/linker settings on Windows
         set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)

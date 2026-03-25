@@ -5,6 +5,7 @@
 
 #include "utils/OutputStreamHandling.h"
 
+#include <boost/dynamic_bitset.hpp>
 #include <gtest/gtest.h>
 #include <memory>
 
@@ -51,8 +52,8 @@ TEST_F(LivenessAnalysisTest, GatherInitialInfo_SimpleLoop) {
         + UEVar = {}
         + VarKill = {%1}
      */
-    std::vector<bool> VarKill_INIT_BLOCK = li.VarKill[0];
-    std::vector<bool> UEVar_INIT_BLOCK = li.UEVar[0];
+    boost::dynamic_bitset<> VarKill_INIT_BLOCK = li.VarKill[0];
+    boost::dynamic_bitset<> UEVar_INIT_BLOCK = li.UEVar[0];
     ASSERT_TRUE(VarKill_INIT_BLOCK[1]);
     ASSERT_FALSE(UEVar_INIT_BLOCK[1]);
 
@@ -60,8 +61,8 @@ TEST_F(LivenessAnalysisTest, GatherInitialInfo_SimpleLoop) {
         + UEVar = {%1}
         + VarKill = {}
      */
-    std::vector<bool> UEVar_main_block  = li.UEVar[1];
-    std::vector<bool> VarKill_main_block  = li.VarKill[1];
+    boost::dynamic_bitset<> UEVar_main_block  = li.UEVar[1];
+    boost::dynamic_bitset<> VarKill_main_block  = li.VarKill[1];
     ASSERT_TRUE(UEVar_main_block[1]);
     ASSERT_FALSE(VarKill_main_block[1]);
 
@@ -69,8 +70,8 @@ TEST_F(LivenessAnalysisTest, GatherInitialInfo_SimpleLoop) {
         + UEVar = {%1}
         + VarKill = {%1}
      */
-    std::vector<bool> VarKill_BLOCK_A = li.VarKill[2];
-    std::vector<bool> UEVar_BLOCK_A  = li.UEVar[2];
+    boost::dynamic_bitset<> VarKill_BLOCK_A = li.VarKill[2];
+    boost::dynamic_bitset<> UEVar_BLOCK_A  = li.UEVar[2];
     ASSERT_TRUE(VarKill_BLOCK_A[1]);
     ASSERT_TRUE(UEVar_BLOCK_A[1]);
     ASSERT_FALSE(VarKill_BLOCK_A[0]);
