@@ -16,22 +16,23 @@ LivenessInfo computeUseDef(Function& fn) {
         each block has k operations of the (generic) form "x <- y op z". 
      **/
     LivenessInfo li;
-    for (const auto &block : fn.blocks) {
-        // Get initial number of VRegs
-        int maxID = 1;
-        for (const auto& instr : block->instructions) {
-            if (instr.def.has_value()) {
-                maxID = std::max(maxID, instr.def->id);
-            }
 
+    // Compute global maxID across all blocks so all vectors are uniformly sized
+    int globalMaxID = 1;
+    for (const auto &block : fn.blocks) {
+        for (const auto& instr : block->instructions) {
+            if (instr.def.has_value())
+                globalMaxID = std::max(globalMaxID, instr.def->id);
             for (const auto &use : instr.operands) {
-                if (auto* reg = std::get_if<VReg>(&use)) {
-                    maxID = std::max(maxID, reg->id);
-                }
+                if (auto* reg = std::get_if<VReg>(&use))
+                    globalMaxID = std::max(globalMaxID, reg->id);
             }
         }
-        int numVars = maxID + 1;
+    }
+    globalMaxID = std::max(globalMaxID, (int)fn.blocks.size());
+    int numVars = globalMaxID + 1;
 
+    for (const auto &block : fn.blocks) {
         // Initialise UEVar and VarKill with the block ID and all 0s
         std::vector<bool> uevar(numVars, false);
         std::vector<bool> varkill(numVars, false);
@@ -43,6 +44,7 @@ LivenessInfo computeUseDef(Function& fn) {
             const std::optional<VReg>& def = instr.def;
             const auto& uses = instr.operands;
 
+            /* Add register operands if not in VarKill */
             for (const auto &var : uses) {
                 if (std::holds_alternative<VReg>(var)) {
                     // If var NOT IN VarKill(block)
@@ -99,13 +101,12 @@ LivenessResult LivenessAnalysis::analyse(Function& fn) {
                 /* Set for LiveOut(S) − VarKill(S) */
                 std::set<int> LiveOut_NotVarKill = {};
 
-                /* Add all of non-varkill values into set */
-                for (const int& x : VarKill) {
-                    if (!VarKill[x]) {
+                /* Add LiveOut values that are not killed */
+                for (const int& x : LiveOut) {
+                    if (x >= (int)VarKill.size() || !VarKill[x]) {
                         LiveOut_NotVarKill.insert(x);
                     }
                 }
-                LiveOut_NotVarKill.insert(LiveOut.begin(), LiveOut.end());
 
                 /* Set for UEVar(S) ∪ (LiveOut(S) − VarKill(S) */
                 std::set<int> UEVar_U_LiveOut_NotVarKill = {};
@@ -140,12 +141,11 @@ LivenessResult LivenessAnalysis::analyse(Function& fn) {
         std::vector<bool> VarKill = li.VarKill[fn.blocks[i]->id];
         std::set<int> LiveOut = lr.liveoutSet[fn.blocks[i]->id];
         std::set<int> LiveOut_NotVarKill = {};
-        for (const int& x : VarKill) {
-            if (!VarKill[x]) {
+        for (const int& x : LiveOut) {
+            if (x >= (int)VarKill.size() || !VarKill[x]) {
                 LiveOut_NotVarKill.insert(x);
             }
         }
-        LiveOut_NotVarKill.insert(LiveOut.begin(), LiveOut.end());
 
         // Set for UEVar(B) ∪ (LiveOut(B) − VarKill(B)
         std::set<int> UEVar_U_LiveOut_NotVarKill = {};

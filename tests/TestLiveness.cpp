@@ -52,14 +52,18 @@ TEST_F(LivenessAnalysisTest, GatherInitialInfo_SimpleLoop) {
         + VarKill = {%1}
      */
     std::vector<bool> VarKill_INIT_BLOCK = li.VarKill[0];
+    std::vector<bool> UEVar_INIT_BLOCK = li.UEVar[0];
     ASSERT_TRUE(VarKill_INIT_BLOCK[1]);
+    ASSERT_FALSE(UEVar_INIT_BLOCK[1]);
 
     /** main_block
         + UEVar = {%1}
         + VarKill = {}
      */
     std::vector<bool> UEVar_main_block  = li.UEVar[1];
+    std::vector<bool> VarKill_main_block  = li.VarKill[1];
     ASSERT_TRUE(UEVar_main_block[1]);
+    ASSERT_FALSE(VarKill_main_block[1]);
 
     /** BLOCK_A
         + UEVar = {%1}
@@ -69,6 +73,8 @@ TEST_F(LivenessAnalysisTest, GatherInitialInfo_SimpleLoop) {
     std::vector<bool> UEVar_BLOCK_A  = li.UEVar[2];
     ASSERT_TRUE(VarKill_BLOCK_A[1]);
     ASSERT_TRUE(UEVar_BLOCK_A[1]);
+    ASSERT_FALSE(VarKill_BLOCK_A[0]);
+    ASSERT_FALSE(UEVar_BLOCK_A[0]);
 
     /** BLOCK_C
         + Can ignore
@@ -100,7 +106,9 @@ TEST_F(LivenessAnalysisTest, Analyse_SimpleLoop) {
     */
 
     std::set<int> LiveOut_INIT_BLOCK = lr.liveoutSet[0];
+    std::set<int> LiveIn_INIT_BLOCK = lr.liveinSet[0];
     ASSERT_TRUE(LiveOut_INIT_BLOCK.count(1));
+    ASSERT_FALSE(LiveIn_INIT_BLOCK.count(1));
 
     /** main_block
         + VarKill = {}
@@ -113,6 +121,8 @@ TEST_F(LivenessAnalysisTest, Analyse_SimpleLoop) {
     std::set<int> LiveIn_main_block = lr.liveinSet[1];
     ASSERT_TRUE(LiveOut_main_block.count(1));
     ASSERT_TRUE(LiveIn_main_block.count(1));
+    ASSERT_FALSE(LiveOut_main_block.count(2));
+    ASSERT_FALSE(LiveIn_main_block.count(2));
 
     /** BLOCK_A
         + VarKill = {%1}
@@ -125,6 +135,8 @@ TEST_F(LivenessAnalysisTest, Analyse_SimpleLoop) {
     std::set<int> LiveIn_BLOCK_A = lr.liveinSet[2];
     ASSERT_TRUE(LiveOut_BLOCK_A.count(1));
     ASSERT_TRUE(LiveIn_BLOCK_A.count(1));
+    ASSERT_FALSE(LiveOut_BLOCK_A.count(0));
+    ASSERT_FALSE(LiveIn_BLOCK_A.count(0));
 
     /** BLOCK_C
         + Can ignore
@@ -147,8 +159,11 @@ TEST_F(LivenessAnalysisTest, Analyse_NestedLoop) {
         + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {}
     */
     std::set<int> LiveOut_INIT_BLOCK = lr.liveoutSet[0];
+    std::set<int> LiveIn_INIT_BLOCK = lr.liveinSet[0];
     ASSERT_TRUE(LiveOut_INIT_BLOCK.count(1));
     ASSERT_TRUE(LiveOut_INIT_BLOCK.count(2));
+    ASSERT_FALSE(LiveIn_INIT_BLOCK.count(1));
+    ASSERT_FALSE(LiveOut_INIT_BLOCK.count(0));
 
     /** OUTER_BLOCK
         + VarKill = {}
@@ -158,11 +173,13 @@ TEST_F(LivenessAnalysisTest, Analyse_NestedLoop) {
         + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {%1, %2}
     */
     std::set<int> LiveOut_OUTER_BLOCK = lr.liveoutSet[1];
-    std::set<int> LiveIn_OUTER_BLOCK = lr.liveoutSet[1];
+    std::set<int> LiveIn_OUTER_BLOCK = lr.liveinSet[1];
     ASSERT_TRUE(LiveOut_OUTER_BLOCK.count(1));
     ASSERT_TRUE(LiveOut_OUTER_BLOCK.count(2));
     ASSERT_TRUE(LiveIn_OUTER_BLOCK.count(1));
     ASSERT_TRUE(LiveIn_OUTER_BLOCK.count(2));
+    ASSERT_FALSE(LiveOut_OUTER_BLOCK.count(0));
+    ASSERT_FALSE(LiveIn_OUTER_BLOCK.count(0));
 
     /** OUTER_BODY
         + VarKill = {%1}
@@ -172,11 +189,11 @@ TEST_F(LivenessAnalysisTest, Analyse_NestedLoop) {
         + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {%1, %2}
     */
     std::set<int> LiveOut_OUTER_BODY = lr.liveoutSet[2];
-    std::set<int> LiveIn_OUTER_BODY = lr.liveoutSet[2];
+    std::set<int> LiveIn_OUTER_BODY = lr.liveinSet[2];
     ASSERT_TRUE(LiveOut_OUTER_BODY.count(1));
     ASSERT_TRUE(LiveOut_OUTER_BODY.count(2));
-    ASSERT_TRUE(LiveIn_OUTER_BODY.count(1));
-    ASSERT_TRUE(LiveIn_OUTER_BODY.count(2));
+    ASSERT_FALSE(LiveIn_OUTER_BODY.count(0));
+    ASSERT_FALSE(LiveOut_OUTER_BODY.count(3));
 
     /** INNER_BLOCK
         + VarKill = {}
@@ -186,11 +203,13 @@ TEST_F(LivenessAnalysisTest, Analyse_NestedLoop) {
         + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {%1, %2}
     */
     std::set<int> LiveOut_INNER_BLOCK = lr.liveoutSet[2];
-    std::set<int> LiveIn_INNER_BLOCK = lr.liveoutSet[2];
+    std::set<int> LiveIn_INNER_BLOCK = lr.liveinSet[2];
     ASSERT_TRUE(LiveOut_INNER_BLOCK.count(1));
     ASSERT_TRUE(LiveOut_INNER_BLOCK.count(2));
     ASSERT_TRUE(LiveIn_INNER_BLOCK.count(1));
     ASSERT_TRUE(LiveIn_INNER_BLOCK.count(2));
+    ASSERT_FALSE(LiveOut_INNER_BLOCK.count(3));
+    ASSERT_FALSE(LiveIn_INNER_BLOCK.count(4));
 
     /** INNER_BODY
         + VarKill = {%2}
@@ -200,11 +219,13 @@ TEST_F(LivenessAnalysisTest, Analyse_NestedLoop) {
         + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {%1, %2}
     */
     std::set<int> LiveOut_INNER_BODY = lr.liveoutSet[2];
-    std::set<int> LiveIn_INNER_BODY = lr.liveoutSet[2];
+    std::set<int> LiveIn_INNER_BODY = lr.liveinSet[2];
     ASSERT_TRUE(LiveOut_INNER_BODY.count(1));
     ASSERT_TRUE(LiveOut_INNER_BODY.count(2));
     ASSERT_TRUE(LiveIn_INNER_BODY.count(1));
     ASSERT_TRUE(LiveIn_INNER_BODY.count(2));
+    ASSERT_FALSE(LiveIn_INNER_BODY.count(0));
+    ASSERT_FALSE(LiveIn_INNER_BODY.count(0));
 
     /** RET_BLOCK
         + VarKill = {%3}
@@ -214,15 +235,72 @@ TEST_F(LivenessAnalysisTest, Analyse_NestedLoop) {
         + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {%1, %2}
     */
     std::set<int> LiveOut_RET_BLOCK = lr.liveoutSet[2];
-    std::set<int> LiveIn_RET_BLOCK = lr.liveoutSet[2];
+    std::set<int> LiveIn_RET_BLOCK = lr.liveinSet[2];
     ASSERT_TRUE(LiveOut_RET_BLOCK.count(1));
     ASSERT_TRUE(LiveOut_RET_BLOCK.count(2));
     ASSERT_TRUE(LiveIn_RET_BLOCK.count(1));
     ASSERT_TRUE(LiveIn_RET_BLOCK.count(2));
+    ASSERT_FALSE(LiveIn_RET_BLOCK.count(3));
+    ASSERT_FALSE(LiveOut_RET_BLOCK.count(3));
 }
 
 TEST_F(LivenessAnalysisTest, Analyse_Diamond) {
+    LivenessResult lr = la.analyse(*diamondFN);
 
+    /** INIT_BLOCK
+        + VarKill = {%1}
+        + UEVar = {}
+        + LiveOut = {%1}
+        + LiveOut ∩ ¬VarKill = {}
+        + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {}
+    */
+    std::set<int> LiveOut_INNIT_BLOCK = lr.liveoutSet[0];
+    std::set<int> LiveIn_INNIT_BLOCK = lr.liveinSet[0];
+    ASSERT_TRUE(LiveOut_INNIT_BLOCK.count(1));
+    ASSERT_FALSE(LiveOut_INNIT_BLOCK.count(0));
+    
+    /** MAIN_BLOCK
+        + VarKill = {}
+        + UEVar = {%1}
+        + LiveOut = {}
+        + LiveOut ∩ ¬VarKill = {}
+        + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {%1}
+    */
+    std::set<int> LiveIn_MAIN_BLOCK = lr.liveinSet[1];
+    ASSERT_TRUE(LiveIn_MAIN_BLOCK.count(1));
+
+    /** COND_1
+        + VarKill = {%1}
+        + UEVar = {}
+        + LiveOut = {}
+        + LiveOut ∩ ¬VarKill = {}
+        + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {}
+    */
+    std::set<int> LiveOut_COND1 = lr.liveoutSet[2];
+    std::set<int> LiveIn_COND1 = lr.liveinSet[2];
+    ASSERT_FALSE(LiveOut_COND1.count(1));
+    ASSERT_FALSE(LiveIn_COND1.count(1));
+
+    /** COND_2
+        + VarKill = {%1}
+        + UEVar = {}
+        + LiveOut = {}
+        + LiveOut ∩ ¬VarKill = {}
+        + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {}
+    */
+    std::set<int> LiveOut_COND2 = lr.liveoutSet[3];
+    std::set<int> LiveIn_COND2 = lr.liveinSet[3];
+    ASSERT_FALSE(LiveOut_COND2.count(1));
+    ASSERT_FALSE(LiveIn_COND2.count(1));
+
+    /** RET_BLOCK
+        + Can ingore
+        + VarKill = {}
+        + UEVar = {}
+        + LiveOut = {}
+        + LiveOut ∩ ¬VarKill = {}
+        + UEVar ∪ (LiveOut ∩ ¬VarKill) = LiveIn = {}
+    */
 }
 
 int main(int argc, char** argv) {
