@@ -5,7 +5,7 @@ iON is a standalone global register allocator. iON takes in an intermediate repr
 > I created iON using only Engineering a Compiler, 3rd ed (EaC). All of the stages within the pipeline are built by implementing the algorithms from EaC.
 iON implements a standard pipeline for rewriting the IR from the original IR using the virtual registers (VRs) to an IR using physical registers (PRs). The rewritten IR code is different since it will include extra instructions for storing and loading data into and from registers as well as instructions for copy coalescing. 
 
-```
+```mermaid
 graph TD
     A[iON IR with VRs] --> B[Create CFG]
     B --> C[Perform Liveness Analysis on CFG]
